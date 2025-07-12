@@ -1,0 +1,38 @@
+{"timestamp":"2025-07-10T19:13:28.466Z","user":"Səid","role":"owner","action":"CREATE_USER","details":{"newUser":"vladimr","role":"sales_manager"},"ip":"::1"}
+{"timestamp":"2025-07-10T20:11:08.912Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T20:11:15.260Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T20:56:11.434Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T21:00:12.945Z","user":"Şirvan","role":"sales_manager","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T21:01:01.718Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:29:27.072Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:32:31.924Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:39:43.859Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:42:55.871Z","user":"Şirvan","role":"sales_manager","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:42:59.116Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:43:21.384Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-10T23:43:25.586Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T01:33:26.887Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T01:36:26.426Z","user":"Şirvan","role":"sales_manager","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T01:36:28.591Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T11:27:16.171Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T11:35:13.390Z","user":"Səid","role":"owner","action":"CREATE_ORDER","details":{"satisNo":"1818","tourist":"sa"},"ip":"::1"}
+{"timestamp":"2025-07-11T11:37:45.716Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T11:39:22.919Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T11:43:19.434Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:06:55.037Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:12:55.973Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:13:08.523Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:13:13.823Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:14:28.023Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:15:32.047Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:15:53.937Z","user":"Şirvan","role":"sales_manager","action":"CREATE_TRANSPORT_PACKAGE","details":{"driver":"jj","destination":"j"},"ip":"::1"}
+{"timestamp":"2025-07-11T12:38:15.209Z","user":"Şirvan","role":"sales_manager","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:40:34.593Z","user":"Şirvan","role":"sales_manager","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:41:01.082Z","user":"Səid","role":"owner","action":"UPDATE_ALL_PERMISSIONS_BY_PASSWORD","details":{"details":"İcazələr parolla yeniləndi."},"ip":"::1"}
+{"timestamp":"2025-07-11T12:41:06.686Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:41:13.711Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:41:17.828Z","user":"Nərmin Axundova","role":"finance","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:42:08.663Z","user":"Nərmin Axundova","role":"finance","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:42:14.613Z","user":"Nərmin Axundova","role":"finance","action":"LOGOUT","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:42:18.226Z","user":"Səid","role":"owner","action":"LOGIN_SUCCESS","details":{},"ip":"::1"}
+{"timestamp":"2025-07-11T12:42:21.064Z","user":"Səid","role":"owner","action":"LOGOUT","details":{},"ip":"::1"}

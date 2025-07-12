@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İcazələrin İdarə Edilməsi</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #eef2f7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .permissions-container { background-color: #fff; padding: 30px 40px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 95%; }
+        h2 { text-align: center; color: #334e68; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 25px; }
+        #auth-section { max-width: 400px; margin: auto; }
+        #auth-section label { display: block; margin-bottom: 8px; font-weight: 500; }
+        #auth-section input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        #auth-section button { display: block; width: 100%; padding: 12px; margin-top: 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; }
+        #permissions-section { margin-top: 20px; }
+        #permissionsTable th, #permissionsTable td { padding: 12px 10px; text-align: center; }
+        #permissionsTable th:first-child, #permissionsTable td:first-child { text-align: left; }
+        #permissionsTable td:last-child { width: 100px; }
+        #permissionsTable input[type="checkbox"] { transform: scale(1.4); cursor: pointer; }
+        #savePermissionsBtn { display: block; width: auto; min-width: 250px; padding: 12px; margin: 25px auto 0 auto; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; }
+        .message { padding: 10px; margin-top: 15px; border-radius: 5px; text-align: center; }
+        .message.error { background-color: #f8d7da; color: #721c24; }
+        .message.success { background-color: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="permissions-container">
+        <h2>Səlahiyyətləri İdarə Et</h2>
+        
+        <div id="auth-section">
+            <p>Dəyişiklik etmək üçün "Owner" parolunu daxil edin.</p>
+            <input type="password" id="ownerPassword" placeholder="Owner Parolu">
+            <button id="verifyOwnerBtn">Təsdiqlə</button>
+        </div>
+
+        <div id="permissions-section" style="display: none;">
+            <div class="table-container">
+                <table id="permissionsTable">
+                    <thead>
+                        <tr>
+                            <th>İstifadəçi</th>
+                            <!-- Əsas İcazələr -->
+                            <th>Sifarişə Düzəliş</th>
+                            <th>Sifarişi Silmək</th>
+                            <th>Maliyyəyə Baxış</th>
+                            <!-- Maliyyə İcazələri -->
+                            <th>İnz. Xərcə Düzəliş</th>
+                            <th>Şirkət Sif. Düzəliş</th>
+                            <th>Ödəniş Statusu Dəyişmək</th>
+                            <!-- Transport İcazələri -->
+                            <th>Transporta Düzəliş</th>
+                            <th>Transportu Silmək</th>
+                            <th>Əməliyyatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- İstifadəçilər bura yüklənəcək -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="savePermissionsBtn">İcazələri Yadda Saxla</button>
+        </div>
+        
+        <div id="message-container"></div>
+    </div>
+
+    <!-- İstifadəçi Redaktə Modalı -->
+    <div id="editUserModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-button">&times;</span>
+            <h3 id="editUserModalTitle">İstifadəçiyə Düzəliş Et</h3>
+            <form id="editUserForm">
+                <input type="hidden" id="editUsernameHidden">
+                <label for="editDisplayName">Ad Soyad:</label>
+                <input type="text" id="editDisplayName" required>
+                
+                <label for="editEmail">E-poçt:</label>
+                <input type="email" id="editEmail" required>
+
+                <label for="editNewPassword">Yeni Şifrə (dəyişmək istəmirsinizsə boş buraxın):</label>
+                <input type="password" id="editNewPassword" placeholder="Ən az 6 simvol">
+
+                <button type="submit">Dəyişiklikləri Yadda Saxla</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="permissions.js"></script>
+</body>
+</html>

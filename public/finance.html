@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maliyyə - İnzibati Xərclər</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* === Naviqasiya stilləri === */
+        header nav .nav-btn {
+            font-family: var(--primary-font);
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+        header nav .nav-btn:hover {
+            background-color: #f3f4f6;
+            color: var(--text-primary);
+        }
+        header nav .nav-btn.active {
+            background-color: var(--primary-action-color);
+            color: white;
+        }
+
+        /* === Digər stillər === */
+        .expense-package-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+        .expense-package-row input[type="text"] { margin-top: 5px; }
+        .total-amount-display { text-align: right; font-size: 1.4em; font-weight: bold; margin-top: 20px; padding-top: 15px; border-top: 2px solid #f0f2f5; }
+        .details-modal-content .info-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; }
+        .details-modal-content .info-grid strong { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Maliyyə Paneli</h1>
+        <nav>
+            <a href="/finance.html" class="nav-btn active">İnzibati Xərclər</a> 
+            <a href="/finance-reports.html" class="nav-btn">Şirkət Hesabatları</a>
+            <a href="/inventory.html" class="nav-btn">İnventar Uçotu</a>
+            <a href="/finance-expense-search.html" class="nav-btn">Detallı Xərc Axtarışı</a>
+            <a href="/" class="logout-btn">Əsas Səhifə</a>
+        </nav>
+    </header>
+
+    <main>
+        <div id="expensesView">
+            <h2>Xərc Paketləri</h2>
+            <div class="actions">
+                <button id="showAddExpenseModalBtn" class="add-order-btn">Yeni Xərc Paketi Əlavə Et</button>
+            </div>
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarix</th>
+                            <th>Ümumi Məbləğ</th>
+                            <th>Əlavə edən</th>
+                            <th>Əməliyyatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Xərc Paketi Əlavə Etmə/Düzəliş Modalı -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close-button">&times;</span>
+            <h3 id="modalTitle">Yeni Xərc Paketi</h3>
+            <form id="expenseForm">
+                <input type="hidden" id="expenseId" name="id">
+                
+                <div class="expense-package-row">
+                    <div>
+                        <label>İcarə</label>
+                        <input type="number" class="cost-input" data-name="icare" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="icare" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                    <div>
+                        <label>Kommunal</label>
+                        <input type="number" class="cost-input" data-name="kommunal" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="kommunal" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                    <div>
+                        <label>Telefon</label>
+                        <input type="number" class="cost-input" data-name="telefon" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="telefon" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                </div>
+                <div class="expense-package-row">
+                    <div>
+                        <label>Ofis xərcləri</label>
+                        <input type="number" class="cost-input" data-name="ofis" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="ofis" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                     <div>
+                        <label>Reklam</label>
+                        <input type="number" class="cost-input" data-name="reklam" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="reklam" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                    <div>
+                        <label>Maaş</label>
+                        <input type="number" class="cost-input" data-name="maas" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="maas" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                </div>
+                 <div class="expense-package-row">
+                    <div>
+                        <label>Sosial sığorta</label>
+                        <input type="number" class="cost-input" data-name="sosial_sigorta" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="sosial_sigorta" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                     <div>
+                        <label>İcbari sığorta</label>
+                        <input type="number" class="cost-input" data-name="icbari_sigorta" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="icbari_sigorta" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                    <div>
+                        <label>Maşın yanacaq</label>
+                        <input type="number" class="cost-input" data-name="yanacaq" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="yanacaq" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                </div>
+                <div class="expense-package-row">
+                    <div>
+                        <label>Günlük xərclər</label>
+                        <input type="number" class="cost-input" data-name="gunluk" placeholder="0.00" step="0.01">
+                        <input type="text" data-comment-for="gunluk" placeholder="Kimə/Nə üçün şərh...">
+                    </div>
+                    <div></div><div></div>
+                </div>
+
+                <div class="total-amount-display">
+                    Ümumi Məbləğ: <span id="totalAmount">0.00</span> AZN
+                </div>
+
+                <button type="submit" id="submitButton">Paketi Yadda Saxla</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Detallara Baxış Modalı -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content details-modal-content" style="max-width: 600px;">
+            <span class="close-button">&times;</span>
+            <h3>Xərc Paketinin Detalları</h3>
+            <div id="detailsContent"></div>
+        </div>
+    </div>
+    
+    <script src="finance.js"></script>
+</body>
+</html>

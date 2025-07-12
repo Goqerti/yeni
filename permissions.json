@@ -1,0 +1,31 @@
+{
+  "sirvan": {
+    "canEditOrder": true,
+    "canDeleteOrder": false,
+    "canEditFinancials": true,
+    "finance_canEditExpenses": false,
+    "finance_canEditCompanyOrders": false,
+    "finance_canChangePayments": false,
+    "transport_canEdit": true,
+    "transport_canDelete": true
+  },
+  "nermin": {
+    "canEditOrder": true,
+    "canDeleteOrder": true,
+    "canEditFinancials": true,
+    "finance_canEditExpenses": true,
+    "finance_canEditCompanyOrders": true,
+    "finance_canChangePayments": true,
+    "transport_canEdit": true,
+    "transport_canDelete": true
+  },
+  "ilkin": {
+    "canEditOrder": false,
+    "canDeleteOrder": false,
+    "canEditFinancials": false,
+    "finance_canEditExpenses": false,
+    "finance_canEditCompanyOrders": false,
+    "finance_canChangePayments": false,
+    "transport_canEdit": false,
+    "transport_canDelete": false
+  },
