@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     i18n.translatePage();
 
     i18n.setupLanguageSwitcher('lang-switcher-main', () => {
-        // Dil dəyişdikdən sonra cədvəlləri yenidən render et
         fetchOrdersAndRender();
         fetchAndRenderDebts();
     });
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentOrders = [];
     let editingOrderId = null;
     let wanderingInterval = null;
-    let stealAnimationTimeout = null; 
 
     // --- DOM Elementləri ---
     const addOrderForm = document.getElementById('addOrderForm');
@@ -112,16 +110,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             headerTitle.textContent = currentUserDisplayName;
         }
         
-        if (currentUserRole === 'owner' || currentUserRole === 'finance') {
-             const navFinanceBtn = document.getElementById('navFinanceBtn');
-             if (navFinanceBtn) navFinanceBtn.style.display = 'inline-block';
-             if (navTransportBtn) navTransportBtn.style.display = 'inline-block';
+        const navFinanceBtn = document.getElementById('navFinanceBtn');
+        if (navFinanceBtn && (currentUserRole === 'owner' || currentUserRole === 'finance')) {
+             navFinanceBtn.style.display = 'inline-flex';
         }
-
     } catch (error) {
         console.error('Giriş bilgileri veya izinler alınamadı:', error);
         window.location.href = '/login.html';
-        return;
     }
     
     // --- TƏNZİMLƏMƏLƏR PANELİ MƏNTİQİ ---
@@ -236,9 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             input.name = `tourist_${i}`;
             input.required = true;
             input.placeholder = `Turist ${i + 1}`;
-            if (tourists[i]) {
-                input.value = tourists[i];
-            }
+            if (tourists[i]) input.value = tourists[i];
             inputGroup.appendChild(label);
             inputGroup.appendChild(input);
             touristsContainer.appendChild(inputGroup);
@@ -278,10 +271,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     
     const calculateGelir = (order) => {
-        const alishAmount = order.alish?.amount || 0;
-        const satishAmount = order.satish?.amount || 0;
-        if (order.alish?.currency === order.satish?.currency) {
-            return { amount: parseFloat((satishAmount - alishAmount).toFixed(2)), currency: order.satish.currency };
+        const alish = order.alish || {};
+        const satish = order.satish || {};
+        if (alish.currency && alish.currency === satish.currency) {
+            return { amount: parseFloat(((satish.amount || 0) - (alish.amount || 0)).toFixed(2)), currency: satish.currency };
         }
         return { amount: 0, currency: 'N/A', note: 'Fərqli valyutalar' };
     };
@@ -289,33 +282,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calculateTotalCost = () => {
         let total = 0;
         document.querySelectorAll('#addOrderForm .cost-input').forEach(input => {
-            if (!input.disabled) {
-                total += parseFloat(input.value) || 0;
-            }
+            if (!input.disabled) total += parseFloat(input.value) || 0;
         });
         const alishAmountInput = document.getElementById('alishAmount');
         if (alishAmountInput) alishAmountInput.value = total.toFixed(2);
     };
 
     const resetModalToCreateMode = () => {
-        try {
-            if (addOrderForm) addOrderForm.reset();
-            if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
-            addHotelEntry();
-            calculateTotalCost();
-            if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
-            if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
-            editingOrderId = null;
-            document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
-            
-            const alishAmountInput = document.getElementById('alishAmount');
-            if(alishAmountInput) alishAmountInput.readOnly = true;
-
-            updateTouristNameInputs();
-        } catch (error) {
-            console.error("Sifariş forması sıfırlanarkən xəta:", error);
-            alert("Sifariş forması hazırlanarkən xəta baş verdi. Zəhmət olmasa, konsola baxın.");
-        }
+        if (addOrderForm) addOrderForm.reset();
+        if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
+        addHotelEntry();
+        calculateTotalCost();
+        if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
+        if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
+        editingOrderId = null;
+        document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
+        const alishAmountInput = document.getElementById('alishAmount');
+        if(alishAmountInput) alishAmountInput.readOnly = true;
+        updateTouristNameInputs();
     };
     
     const fetchOrdersAndRender = async () => {
@@ -331,16 +315,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let filteredOrders = currentOrders;
 
-            if (filterRezNo) {
-                filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
-            }
-            if(filterDate){
-                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
-            } else if (filterMonth){
-                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
-            } else if (filterYear){
-                 filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
-            }
+            if (filterRezNo) filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
+            if(filterDate) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
+            else if (filterMonth) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
+            else if (filterYear) filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
 
             renderOrdersTable(filteredOrders);
         } catch (error) {
@@ -354,26 +332,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tableBody) return;
         tableBody.innerHTML = '';
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); 
-
         orders.sort((a, b) => {
             const getCheckInDate = (order) => {
                 if (order.hotels && order.hotels.length > 0 && order.hotels[0].girisTarixi) {
-                    return new Date(order.hotels[0].girisTarixi);
+                    const dateParts = order.hotels[0].girisTarixi.split('-');
+                    return new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2]));
                 }
                 return null;
             };
-
             const dateA = getCheckInDate(a);
             const dateB = getCheckInDate(b);
-
-            const isAFuture = dateA && dateA >= today;
-            const isBFuture = dateB && dateB >= today;
-
-            if (isAFuture && isBFuture) return dateA - dateB;
-            if (isAFuture) return -1;
-            if (isBFuture) return 1;
+            if (!dateA && !dateB) return new Date(b.creationTimestamp) - new Date(a.creationTimestamp);
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            const dateDifference = dateB - dateA;
+            if (dateDifference !== 0) return dateDifference;
             return new Date(b.creationTimestamp) - new Date(a.creationTimestamp);
         });
 
@@ -382,18 +355,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (totalOrdersEl) totalOrdersEl.textContent = orders.length;
 
             orders.forEach(order => {
-                ['alish', 'satish'].forEach(type => {
-                    const data = order[type] || { amount: 0 };
-                    if (data.currency && totals[data.currency] && typeof data.amount === 'number') {
-                        totals[data.currency][type] += data.amount;
-                    }
-                });
+                const alishData = order.alish || { amount: 0, currency: 'AZN' };
+                const satishData = order.satish || { amount: 0, currency: 'AZN' };
+
+                if (alishData.currency && totals[alishData.currency]) {
+                    totals[alishData.currency].alish += (alishData.amount || 0);
+                }
+                if (satishData.currency && totals[satishData.currency]) {
+                    totals[satishData.currency].satish += (satishData.amount || 0);
+                }
+
                 const gelir = calculateGelir(order);
                 if(gelir.currency && totals[gelir.currency] && !gelir.note){
                     totals[gelir.currency].gelir += gelir.amount;
                 }
-                if ((!order.paymentStatus || order.paymentStatus === 'Ödənilməyib') && order.satish?.currency && totals[order.satish.currency]) {
-                    totals[order.satish.currency].debt += (order.satish.amount || 0);
+                if ((!order.paymentStatus || order.paymentStatus === 'Ödənilməyib') && satishData.currency && totals[satishData.currency]) {
+                    totals[satishData.currency].debt += (satishData.amount || 0);
                 }
             });
 
@@ -422,7 +399,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.insertCell(cellIndex++).textContent = order.satisNo || '-';
             row.insertCell(cellIndex++).textContent = new Date(order.creationTimestamp).toLocaleString('az-AZ');
             row.insertCell(cellIndex++).textContent = order.rezNomresi || '-';
-
             const touristCell = row.insertCell(cellIndex++);
             if (Array.isArray(order.tourists) && order.tourists.length > 0) {
                 let displayText = order.tourists[0];
@@ -433,24 +409,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 touristCell.textContent = order.turist || '-';
             }
-
             row.insertCell(cellIndex++).textContent = order.adultGuests || '0';
             row.insertCell(cellIndex++).textContent = order.childGuests || '0';
             row.insertCell(cellIndex++).textContent = order.xariciSirket || '-';
             row.insertCell(cellIndex++).textContent = (order.hotels && order.hotels[0]) ? order.hotels[0].otelAdi : '-';
-            
             const firstHotel = (order.hotels && order.hotels.length > 0) ? order.hotels[0] : null;
             row.insertCell(cellIndex++).textContent = firstHotel && firstHotel.girisTarixi ? firstHotel.girisTarixi : '-';
-            
-            row.insertCell(cellIndex++).textContent = `${(order.alish || { amount: 0 }).amount.toFixed(2)} ${(order.alish || {}).currency}`;
-            row.insertCell(cellIndex++).textContent = `${(order.satish || { amount: 0 }).amount.toFixed(2)} ${(order.satish || {}).currency}`;
-            
+            row.insertCell(cellIndex++).textContent = `${(order.alish?.amount || 0).toFixed(2)} ${(order.alish || {}).currency}`;
+            row.insertCell(cellIndex++).textContent = `${(order.satish?.amount || 0).toFixed(2)} ${(order.satish || {}).currency}`;
             const gelir = calculateGelir(order);
             row.insertCell(cellIndex++).textContent = `${gelir.amount.toFixed(2)} ${gelir.currency}`;
-            
             const statusKey = { 'Davam edir': 'statusInProgress', 'Bitdi': 'statusCompleted', 'Ləğv edildi': 'statusCancelled' }[order.status] || 'statusInProgress';
             row.insertCell(cellIndex++).textContent = i18n.t(statusKey);
-            
             const operationsCell = row.insertCell(cellIndex++);
             if (currentUserPermissions.canEditOrder) {
                 const editBtn = document.createElement('button');
@@ -464,7 +434,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 deleteBtn.onclick = () => handleDeleteOrder(order.satisNo);
                 operationsCell.appendChild(deleteBtn);
             }
-
             const noteCell = row.insertCell(cellIndex++);
             const noteBtn = document.createElement('button');
             noteBtn.className = 'action-btn note'; noteBtn.innerHTML = '📄';
@@ -488,7 +457,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         setInputValue('xariciSirket', orderToEdit.xariciSirket);
         setInputValue('adultGuests', orderToEdit.adultGuests);
         setInputValue('childGuests', orderToEdit.childGuests);
-        setInputValue('vizaSayi', orderToEdit.vizaSayi);
         setInputValue('rezNomresi', orderToEdit.rezNomresi);
         setInputValue('transport_surucuMelumatlari', orderToEdit.transport?.surucuMelumatlari);
         setInputValue('transport_xerci', orderToEdit.transport?.xerci);
@@ -506,9 +474,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateTouristNameInputs(orderToEdit.tourists || [orderToEdit.turist]);
         
         const costs = orderToEdit.detailedCosts || {};
-        document.querySelectorAll('.cost-input[id^="detailedCost_"]').forEach(input => {
-            const key = input.id.replace('detailedCost_', '') + 'Xerci';
-            input.value = costs[key] || 0;
+        const costTypes = ['paket', 'beledci', 'muzey', 'viza', 'diger'];
+        costTypes.forEach(key => {
+            setInputValue(`detailedCost_${key}`, costs[key + 'Xerci']);
         });
 
         if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
@@ -645,7 +613,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 editBtn.className = 'action-btn edit';
                 editBtn.innerHTML = '✏️';
                 editBtn.title = 'Sifarişə düzəliş et';
-                editBtn.onclick = () => handleEditOrder(res.satisNo);
+                editBtn.onclick = () => {
+                    nav.showView('satishlar');
+                    handleEditOrder(res.satisNo);
+                };
                 actionsCell.appendChild(editBtn);
             }
         });
@@ -883,13 +854,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Hadisə Dinləyiciləri ---
     if (showAddOrderFormBtn) {
         showAddOrderFormBtn.addEventListener('click', () => { 
-            try {
-                resetModalToCreateMode(); 
-                modal.style.display = 'block';
-            } catch (error) {
-                console.error("Yeni sifariş düyməsinə kliklədikdə xəta baş verdi:", error);
-                alert("Forma açıla bilmədi. Zəhmət olmasa, konsola baxın.");
-            }
+            resetModalToCreateMode(); 
+            modal.style.display = 'block';
         });
     }
     if (closeButton) closeButton.addEventListener('click', () => modal.style.display = 'none');
@@ -900,7 +866,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.body.addEventListener('input', (e) => { if (e.target.matches('#addOrderForm .cost-input')) calculateTotalCost(); });
     if (addHotelBtn) addHotelBtn.addEventListener('click', () => addHotelEntry());
-    if (hotelEntriesContainer) hotelEntriesContainer.addEventListener('click', (e) => { if (e.target.classList.contains('remove-hotel-btn')) { e.target.closest('.hotel-entry').remove(); calculateTotalCost(); } });
+    if (hotelEntriesContainer) {
+        hotelEntriesContainer.addEventListener('click', (e) => { if (e.target.classList.contains('remove-hotel-btn')) { e.target.closest('.hotel-entry').remove(); calculateTotalCost(); } });
+        hotelEntriesContainer.addEventListener('change', (e) => { if (e.target.classList.contains('hotel-confirmation-upload')) handleFileUpload(e.target); });
+        hotelEntriesContainer.addEventListener('input', (e) => {
+            if (e.target.classList.contains('hotel-confirmation-path')) {
+                const linkElement = e.target.nextElementSibling;
+                if (e.target.value.trim()) {
+                    linkElement.href = e.target.value.trim();
+                    linkElement.classList.add('visible');
+                } else {
+                    linkElement.classList.remove('visible');
+                }
+            }
+        });
+    }
     
     if (addOrderForm) {
         addOrderForm.addEventListener('submit', async (e) => {
@@ -975,7 +955,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    if (noteForm) noteForm.addEventListener('submit', async (e) => { 
+    if (noteForm) noteForm.addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const satisNo = noteSatisNoInput.value;
         const qeyd = noteTextInput.value;
@@ -1017,60 +997,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (borclarSearchBtn) borclarSearchBtn.addEventListener('click', fetchAndRenderDebts);
     if (adultGuestsInput) adultGuestsInput.addEventListener('input', () => updateTouristNameInputs());
     if (childGuestsInput) childGuestsInput.addEventListener('input', () => updateTouristNameInputs());
-    if (hotelEntriesContainer) {
-        hotelEntriesContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('hotel-confirmation-upload')) {
-                handleFileUpload(e.target);
-            }
-        });
-        hotelEntriesContainer.addEventListener('input', (e) => {
-            if (e.target.classList.contains('hotel-confirmation-path')) {
-                const linkElement = e.target.nextElementSibling;
-                if (e.target.value.trim()) {
-                    linkElement.href = e.target.value.trim();
-                    linkElement.classList.add('visible');
-                } else {
-                    linkElement.classList.remove('visible');
-                }
-            }
-        });
-    }
-
-    const handleFileUpload = async (fileInput) => {
-        const file = fileInput.files[0];
-        if (!file) return;
-
-        const wrapper = fileInput.closest('.file-upload-wrapper');
-        const statusSpan = wrapper.querySelector('.file-status');
-        const link = wrapper.querySelector('.view-confirmation');
-        const pathInput = wrapper.querySelector('.hotel-confirmation-path');
-
-        statusSpan.textContent = 'Yüklənir...';
-        statusSpan.style.color = 'var(--text-secondary)';
-        link.style.display = 'none';
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) throw new Error('Yükləmə zamanı xəta baş verdi.');
-
-            const result = await response.json();
-            statusSpan.textContent = 'Yükləndi!';
-            statusSpan.style.color = 'var(--success-color)';
-            pathInput.value = result.filePath;
-            link.href = result.filePath;
-            link.style.display = 'inline-flex';
-        } catch (error) {
-            statusSpan.textContent = `Xəta: ${error.message}`;
-            statusSpan.style.color = 'red';
-        }
-    };
-
+    
     // --- NAVİQASİYA MƏNTİQİ ---
     const setupNavigation = () => {
         const views = { satishlar: satishlarView, rezervasiyalar: rezervasiyalarView, bildirishler: bildirishlerView, axtarish: searchView, hesabat: hesabatView, chat: chatView, borclar: borclarView };
@@ -1100,6 +1027,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { showView };
     };
     
+    // --- İlkin Yükləmə ---
     const fetchAndRenderPendingTasksCount = async () => {
         if (!tasksCountBadge) return;
         try {
@@ -1117,7 +1045,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // --- İlkin Yükləmə ---
     const nav = setupNavigation();
     fetchOrdersAndRender();
     fetchAndRenderNotifications();
