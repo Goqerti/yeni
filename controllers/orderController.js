@@ -22,52 +22,27 @@ const formatChanges = (original, updated) => {
         rezNomresi: "Rez. nömrəsi",
         paymentStatus: "Ödəniş statusu"
     };
-
     const originalTouristsStr = Array.isArray(original.tourists) ? original.tourists.join(', ') : original.turist;
     const updatedTouristsStr = Array.isArray(updated.tourists) ? updated.tourists.join(', ') : updated.turist;
-
     if (originalTouristsStr !== updatedTouristsStr) {
         changes.push(`- <i>Turistlər</i>: '${originalTouristsStr || ""}' -> '${updatedTouristsStr || ""}'`);
     }
-
     for (const key in fieldsToTrack) {
         if (original[key] !== updated[key]) {
             changes.push(`- <i>${fieldsToTrack[key]}</i>: '${original[key] || ""}' -> '${updated[key] || ""}'`);
         }
     }
-
     const originalAlish = `${(original.alish?.amount || 0).toFixed(2)} ${original.alish?.currency}`;
     const updatedAlish = `${(updated.alish?.amount || 0).toFixed(2)} ${updated.alish?.currency}`;
     if (originalAlish !== updatedAlish) {
         changes.push(`- <i>Alış qiyməti</i>: '${originalAlish}' -> '${updatedAlish}'`);
     }
-
     const originalSatish = `${(original.satish?.amount || 0).toFixed(2)} ${original.satish?.currency}`;
     const updatedSatish = `${(updated.satish?.amount || 0).toFixed(2)} ${updated.satish?.currency}`;
     if (originalSatish !== updatedSatish) {
         changes.push(`- <i>Satış qiyməti</i>: '${originalSatish}' -> '${updatedSatish}'`);
     }
-
     return changes.length > 0 ? `\n<b>Dəyişikliklər:</b>\n${changes.join('\n')}` : '';
-};
-
-const calculateOverallPaymentStatus = (paymentDetails) => {
-    const allItems = [];
-    if (paymentDetails) {
-        (paymentDetails.hotels || []).forEach(item => { if(item.name) allItems.push(item.paid) });
-        if (paymentDetails.transport) allItems.push(paymentDetails.transport.paid);
-        if (paymentDetails.detailedCosts) {
-            Object.values(paymentDetails.detailedCosts).forEach(item => allItems.push(item.paid));
-        }
-    }
-    
-    if (allItems.length === 0 || allItems.every(status => status === false)) {
-        return 'unpaid';
-    }
-    if (allItems.every(status => status === true)) {
-        return 'paid';
-    }
-    return 'partial';
 };
 
 const ensurePaymentDetails = (order) => {
@@ -75,14 +50,11 @@ const ensurePaymentDetails = (order) => {
         order.paymentDetails = {};
     }
     const details = order.paymentDetails;
-    
     details.hotels = (order.hotels || []).map(h => {
         const existing = details.hotels?.find(hd => hd.name === h.otelAdi);
         return { name: h.otelAdi, paid: existing?.paid || false, receiptPath: h.confirmationPath || existing?.receiptPath || null };
     });
-
     if (!details.transport) details.transport = { paid: false, receiptPath: null };
-    
     const costKeys = ['paket', 'beledci', 'muzey', 'viza', 'diger'];
     if (!details.detailedCosts) details.detailedCosts = {};
     costKeys.forEach(key => {
@@ -90,14 +62,14 @@ const ensurePaymentDetails = (order) => {
             details.detailedCosts[key] = { paid: false, receiptPath: null };
         }
     });
-
     return order;
 };
 
 const logConfirmationLinks = (req, order) => {
     if (order.hotels && Array.isArray(order.hotels)) {
         order.hotels.forEach(hotel => {
-            if (hotel.confirmationPath && (!req.originalOrder || req.originalOrder.hotels.find(h => h.otelAdi === hotel.otelAdi)?.confirmationPath !== hotel.confirmationPath)) {
+            const originalHotel = req.originalOrder?.hotels?.find(h => h.otelAdi === hotel.otelAdi);
+            if (hotel.confirmationPath && hotel.confirmationPath !== originalHotel?.confirmationPath) {
                 const logEntry = {
                     timestamp: new Date().toISOString(),
                     satisNo: order.satisNo,
@@ -110,6 +82,25 @@ const logConfirmationLinks = (req, order) => {
         });
     }
 };
+
+const calculateOverallPaymentStatus = (paymentDetails) => {
+    const allItems = [];
+    if (paymentDetails) {
+        (paymentDetails.hotels || []).forEach(item => { if(item.name) allItems.push(item.paid) });
+        if (paymentDetails.transport) allItems.push(paymentDetails.transport.paid);
+        if (paymentDetails.detailedCosts) {
+            Object.values(paymentDetails.detailedCosts).forEach(item => allItems.push(item.paid));
+        }
+    }
+    if (allItems.length === 0 || allItems.every(status => status === false)) {
+        return 'unpaid';
+    }
+    if (allItems.every(status => status === true)) {
+        return 'paid';
+    }
+    return 'partial';
+};
+
 
 // --- Controller Funksiyaları ---
 
@@ -135,53 +126,28 @@ exports.createOrder = (req, res) => {
             const maxSatisNo = Math.max(...orders.map(o => parseInt(o.satisNo)).filter(num => !isNaN(num)), 0);
             nextSatisNo = maxSatisNo >= 1695 ? maxSatisNo + 1 : 1695;
         }
-
         let orderToSave = {
             satisNo: String(nextSatisNo),
             creationTimestamp: new Date().toISOString(),
-            createdBy: req.session.user.username,
+            createdBy: req.session.user.displayName, // yaradanın adını qeyd edirik
             ...newOrderData,
             paymentStatus: newOrderData.paymentStatus || 'Ödənilməyib',
             paymentDueDate: newOrderData.paymentDueDate || null,
         };
-        
         orderToSave = ensurePaymentDetails(orderToSave);
         delete orderToSave.turist;
-
         orders.push(orderToSave);
         fileStore.saveAllOrders(orders);
-
         logConfirmationLinks(req, orderToSave);
-
         const gelir = calculateGelir(orderToSave);
         if (gelir.amount < 0) {
-            const warningMessage = `🔴 **DİQQƏT: MƏNFİ GƏLİR!**\nİstifadəçi *${req.session.user.displayName}* tərəfindən yaradılan №${orderToSave.satisNo} sifariş mənfi gəlirlə (${gelir.amount.toFixed(2)} ${gelir.currency}) yadda saxlanıldı!`;
-            telegram.sendSimpleMessage(warningMessage);
+            telegram.sendSimpleMessage(`🔴 **DİQQƏT: MƏNFİ GƏLİR!**\nİstifadəçi *${req.session.user.displayName}* tərəfindən yaradılan №${orderToSave.satisNo} sifariş mənfi gəlirlə (${gelir.amount.toFixed(2)} ${gelir.currency}) yadda saxlanıldı!`);
         }
-        const largeSaleThreshold = 10000;
-        if (orderToSave.satish.amount >= largeSaleThreshold) {
-            const celebrationMessage = `🎉 **BÖYÜK SATIŞ!**\n*${req.session.user.displayName}*, ${orderToSave.satish.amount.toFixed(2)} ${orderToSave.satish.currency} məbləğində yeni sifariş (№${orderToSave.satisNo}) yaratdı!`;
-            telegram.sendSimpleMessage(celebrationMessage);
-        }
-        
         const primaryTourist = orderToSave.tourists[0];
         const actionMessage = `yeni sifariş (№${orderToSave.satisNo}) yaratdı: <b>${primaryTourist}</b>`;
         telegram.sendLog(telegram.formatLog(req.session.user, actionMessage));
         logAction(req, 'CREATE_ORDER', { satisNo: orderToSave.satisNo, tourist: primaryTourist });
-
-        const userOrdersCount = orders.filter(o => o.createdBy === req.session.user.username).length;
-        const milestones = [10, 50, 100];
-        let milestoneReached = null;
-        if (milestones.includes(userOrdersCount)) {
-            milestoneReached = { count: userOrdersCount };
-        }
-        
-        res.status(201).json({ 
-            ...orderToSave, 
-            gelir: calculateGelir(orderToSave), 
-            milestone: milestoneReached
-        });
-
+        res.status(201).json({ ...orderToSave, gelir: calculateGelir(orderToSave) });
     } catch (error) {
         console.error("Sifariş yaradılarkən xəta:", error);
         res.status(500).json({ message: 'Serverdə daxili xəta baş verdi.' });
@@ -190,74 +156,39 @@ exports.createOrder = (req, res) => {
 
 exports.updateOrder = (req, res) => {
     const { username, role } = req.session.user;
-    const permissions = fileStore.getPermissions();
-    const userPermissions = permissions[username] || {}; 
-
+    const userPermissions = fileStore.getPermissions()[username] || {}; 
     if (role !== 'owner' && !userPermissions.canEditOrder) {
         return res.status(403).json({ message: 'Sifarişi redaktə etməyə icazəniz yoxdur.' });
     }
     try {
         const { satisNo } = req.params;
         const updatedOrderData = req.body;
-        
-        if (updatedOrderData.tourists && (!Array.isArray(updatedOrderData.tourists) || updatedOrderData.tourists.some(t => !t || t.trim() === ''))) {
-            return res.status(400).json({ message: 'Bütün turist adları daxil edilməlidir.' });
-        }
-
         let orders = fileStore.getOrders();
         const orderIndex = orders.findIndex(o => String(o.satisNo) === String(satisNo));
         if (orderIndex === -1) return res.status(404).json({ message: `Sifariş (${satisNo}) tapılmadı.` });
-
+        
         const originalOrder = { ...orders[orderIndex] };
         req.originalOrder = originalOrder;
-
+        
         let orderToUpdate = { ...orders[orderIndex] };
         
-        orderToUpdate = ensurePaymentDetails(orderToUpdate);
-        
-        if (updatedOrderData.hotels) {
-             const newHotelPaymentDetails = updatedOrderData.hotels.map(h => {
-                const existing = orderToUpdate.paymentDetails.hotels.find(pdh => pdh.name === h.otelAdi);
-                return { name: h.otelAdi, paid: existing ? existing.paid : false, receiptPath: h.confirmationPath || existing?.receiptPath || null };
-             });
-             orderToUpdate.paymentDetails.hotels = newHotelPaymentDetails;
-        }
-
-        const canEditFinancials = role === 'owner' || (userPermissions.canEditFinancials);
-
+        const canEditFinancials = role === 'owner' || userPermissions.canEditFinancials;
         if (!canEditFinancials) {
             delete updatedOrderData.alish;
             delete updatedOrderData.satish;
             delete updatedOrderData.detailedCosts;
         }
-
-        Object.assign(orderToUpdate, updatedOrderData);
-        delete orderToUpdate.turist;
         
-        orderToUpdate.satisNo = satisNo;
+        Object.assign(orderToUpdate, updatedOrderData);
         orders[orderIndex] = orderToUpdate;
         fileStore.saveAllOrders(orders);
-
         logConfirmationLinks(req, orderToUpdate);
-
-        const gelir = calculateGelir(orderToUpdate);
-        if (gelir.amount < 0) {
-            const warningMessage = `🔴 **DİQQƏT: MƏNFİ GƏLİR!**\nİstifadəçi *${req.session.user.displayName}* tərəfindən düzəliş edilən №${orderToUpdate.satisNo} sifarişin gəliri mənfidir (${gelir.amount.toFixed(2)} ${gelir.currency})!`;
-            telegram.sendSimpleMessage(warningMessage);
-        }
-
+        
         const changesText = formatChanges(originalOrder, orderToUpdate);
-        
         let telegramMessage = `sifarişə (№${satisNo}) düzəliş etdi.`;
-        if (changesText) {
-            telegramMessage += changesText;
-        }
+        if (changesText) telegramMessage += changesText;
         telegram.sendLog(telegram.formatLog(req.session.user, telegramMessage));
-        
-        logAction(req, 'UPDATE_ORDER', { 
-            satisNo: satisNo,
-            changes: changesText.replace(/<\/?b>|<\/?i>/g, '')
-        });
+        logAction(req, 'UPDATE_ORDER', { satisNo: satisNo, changes: changesText.replace(/<\/?b>|<\/?i>/g, '') });
 
         res.status(200).json({ message: 'Sifariş uğurla yeniləndi.'});
     } catch (error) {
@@ -337,9 +268,11 @@ exports.searchOrderByRezNo = (req, res) => {
 
 exports.getReservations = (req, res) => {
     try {
-        const orders = fileStore.getOrders();
+        const allOrders = fileStore.getOrders();
+        const activeOrders = allOrders.filter(order => order.status === 'Davam edir' || !order.status);
+        
         let allReservations = [];
-        orders.forEach(order => {
+        activeOrders.forEach(order => {
             const primaryTourist = (order.tourists && order.tourists[0]) || order.turist || '-';
             if (Array.isArray(order.hotels)) {
                 order.hotels.forEach(hotel => {
@@ -410,7 +343,7 @@ exports.getOrdersByCompany = (req, res) => {
         const companyName = req.query.company;
 
         if (!companyName) {
-            const uniqueCompanies = [...new Set(orders.map(o => o.xariciSirket).filter(Boolean))];
+            const uniqueCompanies = [...new Set(orders.map(o => o.xariciSirket).filter(name => typeof name === 'string' && name.trim() !== ''))];
             uniqueCompanies.sort();
             return res.json(uniqueCompanies);
         }
@@ -510,5 +443,45 @@ exports.getNotifications = (req, res) => {
     } catch (error) {
         console.error("Bildirişləri gətirərkən xəta:", error);
         res.status(500).json({ message: "Bildirişləri gətirmək mümkün olmadı." });
+    }
+};
+
+exports.updateHotelConfirmation = (req, res) => {
+    try {
+        const { satisNo } = req.params;
+        const { otelAdi, confirmationPath } = req.body;
+
+        if (!otelAdi) {
+            return res.status(400).json({ message: "Otel adı göndərilməyib." });
+        }
+
+        let orders = fileStore.getOrders();
+        const orderIndex = orders.findIndex(o => o.satisNo === satisNo);
+
+        if (orderIndex === -1) {
+            return res.status(404).json({ message: "Sifariş tapılmadı." });
+        }
+
+        let order = orders[orderIndex];
+        
+        if (!order.hotels || !Array.isArray(order.hotels)) {
+            order.hotels = [];
+        }
+
+        const hotelIndex = order.hotels.findIndex(h => h.otelAdi === otelAdi);
+
+        if (hotelIndex === -1) {
+            return res.status(404).json({ message: `'${otelAdi}' adlı otel bu sifarişdə tapılmadı.` });
+        }
+
+        orders[orderIndex].hotels[hotelIndex].confirmationPath = confirmationPath || null;
+        fileStore.saveAllOrders(orders);
+
+        logAction(req, 'UPDATE_CONFIRMATION_LINK', { satisNo, hotel: otelAdi, path: confirmationPath });
+
+        res.status(200).json({ message: "Sənəd linki uğurla yadda saxlandı." });
+    } catch (error) {
+        console.error("Sənəd linki saxlanılarkən xəta:", error);
+        res.status(500).json({ message: "Serverdə daxili xəta baş verdi." });
     }
 };
