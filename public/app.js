@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentOrders = [];
     let editingOrderId = null;
     let wanderingInterval = null;
+    let stealAnimationTimeout = null; 
 
     // --- DOM Elementləri ---
     const addOrderForm = document.getElementById('addOrderForm');
@@ -110,13 +111,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             headerTitle.textContent = currentUserDisplayName;
         }
         
-        const navFinanceBtn = document.getElementById('navFinanceBtn');
-        if (navFinanceBtn && (currentUserRole === 'owner' || currentUserRole === 'finance')) {
-             navFinanceBtn.style.display = 'inline-flex';
+        if (currentUserRole === 'owner' || currentUserRole === 'finance') {
+             const navFinanceBtn = document.getElementById('navFinanceBtn');
+             if (navFinanceBtn) navFinanceBtn.style.display = 'inline-block';
+             if (navTransportBtn) navTransportBtn.style.display = 'inline-block';
         }
+
     } catch (error) {
         console.error('Giriş bilgileri veya izinler alınamadı:', error);
         window.location.href = '/login.html';
+        return;
     }
     
     // --- TƏNZİMLƏMƏLƏR PANELİ MƏNTİQİ ---
@@ -231,7 +235,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             input.name = `tourist_${i}`;
             input.required = true;
             input.placeholder = `Turist ${i + 1}`;
-            if (tourists[i]) input.value = tourists[i];
+            if (tourists[i]) {
+                input.value = tourists[i];
+            }
             inputGroup.appendChild(label);
             inputGroup.appendChild(input);
             touristsContainer.appendChild(inputGroup);
@@ -282,24 +288,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calculateTotalCost = () => {
         let total = 0;
         document.querySelectorAll('#addOrderForm .cost-input').forEach(input => {
-            if (!input.disabled) total += parseFloat(input.value) || 0;
+            if (!input.disabled) {
+                total += parseFloat(input.value) || 0;
+            }
         });
         const alishAmountInput = document.getElementById('alishAmount');
         if (alishAmountInput) alishAmountInput.value = total.toFixed(2);
     };
 
     const resetModalToCreateMode = () => {
-        if (addOrderForm) addOrderForm.reset();
-        if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
-        addHotelEntry();
-        calculateTotalCost();
-        if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
-        if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
-        editingOrderId = null;
-        document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
-        const alishAmountInput = document.getElementById('alishAmount');
-        if(alishAmountInput) alishAmountInput.readOnly = true;
-        updateTouristNameInputs();
+        try {
+            if (addOrderForm) addOrderForm.reset();
+            if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
+            addHotelEntry();
+            calculateTotalCost();
+            if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
+            if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
+            editingOrderId = null;
+            document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
+            
+            const alishAmountInput = document.getElementById('alishAmount');
+            if(alishAmountInput) alishAmountInput.readOnly = true;
+
+            updateTouristNameInputs();
+        } catch (error) {
+            console.error("Sifariş forması sıfırlanarkən xəta:", error);
+            alert("Sifariş forması hazırlanarkən xəta baş verdi. Zəhmət olmasa, konsola baxın.");
+        }
     };
     
     const fetchOrdersAndRender = async () => {
@@ -315,10 +330,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let filteredOrders = currentOrders;
 
-            if (filterRezNo) filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
-            if(filterDate) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
-            else if (filterMonth) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
-            else if (filterYear) filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
+            if (filterRezNo) {
+                filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
+            }
+            if(filterDate){
+                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
+            } else if (filterMonth){
+                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
+            } else if (filterYear){
+                 filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
+            }
 
             renderOrdersTable(filteredOrders);
         } catch (error) {
@@ -861,7 +882,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeButton) closeButton.addEventListener('click', () => modal.style.display = 'none');
     if (closeNoteModalBtn) closeNoteModalBtn.addEventListener('click', () => noteModal.style.display = 'none');
     window.addEventListener('click', (e) => { 
-        if (e.target === modal) modal.style.display = 'none'; 
         if (e.target === noteModal) noteModal.style.display = 'none';
     });
     document.body.addEventListener('input', (e) => { if (e.target.matches('#addOrderForm .cost-input')) calculateTotalCost(); });
