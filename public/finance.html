@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* === Naviqasiya stilləri === */
+      /* === Naviqasiya stilləri === */
         header nav .nav-btn {
             font-family: var(--primary-font);
             padding: 8px 16px;
@@ -29,13 +29,155 @@
             background-color: var(--primary-action-color);
             color: white;
         }
+        
+        /* === Sifariş Sətrinin Status Rəngləri === */
+        .order-row.status-paid { border-left: 5px solid #28a745; }
+        .order-row.status-partial { border-left: 5px solid #ffc107; }
+        .order-row.status-unpaid { border-left: 5px solid #dc3545; }
 
-        /* === Digər stillər === */
-        .expense-package-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px; }
-        .expense-package-row input[type="text"] { margin-top: 5px; }
-        .total-amount-display { text-align: right; font-size: 1.4em; font-weight: bold; margin-top: 20px; padding-top: 15px; border-top: 2px solid #f0f2f5; }
-        .details-modal-content .info-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; }
-        .details-modal-content .info-grid strong { font-weight: 600; }
+        /* ============================================== */
+        /* SİFARİŞ FORMASI (addOrderForm) ÜÇÜN STILLƏR   */
+        /* ============================================== */
+
+        /* --- Modal Pəncərənin Ümumi Stili --- */
+        .modal {
+            display: none; /* YALNIZ BU QALMALIDIR */
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* --- Modal Məzmun Bloku (Ağ Pəncərə) --- */
+        .modal-content {
+            background-color: var(--surface-color, #ffffff); 
+            padding: 35px; 
+            border: none;
+            width: 90%; 
+            max-width: 850px; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1));
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* --- Modal Başlıqları --- */
+        .modal-content h3 { 
+            margin-top: 0; 
+            font-size: 1.5em; 
+            border-bottom: 1px solid var(--border-color, #e5e7eb); 
+            padding-bottom: 15px; 
+            margin-bottom: 25px;
+        }
+        .modal-content h4 { 
+            font-size: 1.1em; 
+            color: var(--primary-action-color, #3b82f6); 
+            margin-top: 25px; 
+            margin-bottom: 15px; 
+        }
+
+        /* --- Bağlama (X) Düyməsi --- */
+        .close-button { 
+            color: #9ca3af; 
+            float: right; 
+            font-size: 32px; 
+            font-weight: bold; 
+            transition: color 0.2s; 
+            position: absolute; 
+            top: 15px; 
+            right: 25px; 
+            cursor: pointer; 
+        }
+        .close-button:hover, .close-button:focus { 
+            color: var(--text-primary, #1f2937); 
+            text-decoration: none; 
+        }
+
+        /* --- Formanın Daxili Elementləri --- */
+        #addOrderForm label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        #addOrderForm input[type="text"],
+        #addOrderForm input[type="number"],
+        #addOrderForm input[type="date"],
+        #addOrderForm select,
+        #addOrderForm textarea {
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid var(--border-color, #e5e7eb); 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 0.95em; 
+            background-color: #f9fafb;
+        }
+
+        #addOrderForm button[type="submit"] {
+            background-color: var(--accent-color, #10b981); 
+            color: white; 
+            padding: 12px 25px; 
+            border: none;
+            border-radius: var(--border-radius, 8px); 
+            cursor: pointer; 
+            font-size: 1em; 
+            margin-top: 30px; 
+            display: block;
+            width: auto; 
+            min-width: 200px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            transition: background-color 0.2s; 
+            font-weight: 600;
+        }
+
+        #addOrderForm button[type="submit"]:hover {
+            background-color: var(--accent-hover, #059669);
+        }
+
+        .form-group-inline { 
+            display: flex; 
+            gap: 20px; 
+            align-items: center; 
+            margin-bottom: 12px; 
+        }
+        .form-group-inline > div { 
+            flex: 1; 
+        }
+
+        .hotel-entry { 
+            background-color: #f9fafb; 
+            padding: 16px; 
+            border: 1px solid var(--border-color, #e5e7eb); 
+            border-radius: var(--border-radius, 8px); 
+            margin-bottom: 16px; 
+        }
+        .dynamic-section-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .dynamic-input-container .form-group { margin-bottom: 10px; }
+        .dynamic-input-container .form-group label { font-size: 0.9em; color: #555; }
+        
+        .payment-toggle-btn { padding: 5px 10px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 0.8em; background-color: #f8f9fa; transition: all 0.2s; }
+        .payment-toggle-btn.paid { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
+        
+        .form-group-inline.payment-item { justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .form-group-inline.payment-item label { margin-bottom: 0; text-align: left; }
+        .form-group-inline.payment-item input { max-width: 150px; }
+        .hotel-entry .form-group-inline { justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -60,7 +202,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Tarix</th>
+                            <th>Paket Tarixi</th>
                             <th>Ümumi Məbləğ</th>
                             <th>Əlavə edən</th>
                             <th>Əməliyyatlar</th>
@@ -72,73 +214,15 @@
         </div>
     </main>
 
-    <!-- Xərc Paketi Əlavə Etmə/Düzəliş Modalı -->
     <div id="expenseModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content" style="max-width: 900px;">
             <span class="close-button">&times;</span>
             <h3 id="modalTitle">Yeni Xərc Paketi</h3>
             <form id="expenseForm">
                 <input type="hidden" id="expenseId" name="id">
                 
-                <div class="expense-package-row">
-                    <div>
-                        <label>İcarə</label>
-                        <input type="number" class="cost-input" data-name="icare" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="icare" placeholder="Kimə/Nə üçün şərh...">
+                <div id="expenseItemsContainer">
                     </div>
-                    <div>
-                        <label>Kommunal</label>
-                        <input type="number" class="cost-input" data-name="kommunal" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="kommunal" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                    <div>
-                        <label>Telefon</label>
-                        <input type="number" class="cost-input" data-name="telefon" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="telefon" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                </div>
-                <div class="expense-package-row">
-                    <div>
-                        <label>Ofis xərcləri</label>
-                        <input type="number" class="cost-input" data-name="ofis" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="ofis" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                     <div>
-                        <label>Reklam</label>
-                        <input type="number" class="cost-input" data-name="reklam" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="reklam" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                    <div>
-                        <label>Maaş</label>
-                        <input type="number" class="cost-input" data-name="maas" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="maas" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                </div>
-                 <div class="expense-package-row">
-                    <div>
-                        <label>Sosial sığorta</label>
-                        <input type="number" class="cost-input" data-name="sosial_sigorta" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="sosial_sigorta" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                     <div>
-                        <label>İcbari sığorta</label>
-                        <input type="number" class="cost-input" data-name="icbari_sigorta" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="icbari_sigorta" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                    <div>
-                        <label>Maşın yanacaq</label>
-                        <input type="number" class="cost-input" data-name="yanacaq" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="yanacaq" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                </div>
-                <div class="expense-package-row">
-                    <div>
-                        <label>Günlük xərclər</label>
-                        <input type="number" class="cost-input" data-name="gunluk" placeholder="0.00" step="0.01">
-                        <input type="text" data-comment-for="gunluk" placeholder="Kimə/Nə üçün şərh...">
-                    </div>
-                    <div></div><div></div>
-                </div>
 
                 <div class="total-amount-display">
                     Ümumi Məbləğ: <span id="totalAmount">0.00</span> AZN
@@ -149,7 +233,6 @@
         </div>
     </div>
     
-    <!-- Detallara Baxış Modalı -->
     <div id="detailsModal" class="modal">
         <div class="modal-content details-modal-content" style="max-width: 600px;">
             <span class="close-button">&times;</span>
@@ -161,3 +244,4 @@
     <script src="finance.js"></script>
 </body>
 </html>
+
