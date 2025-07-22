@@ -48,5 +48,25 @@
     "finance_canChangePayments": true,
     "transport_canEdit": true,
     "transport_canDelete": true
+  },
+  "ceyhun": {
+    "canEditOrder": true,
+    "canDeleteOrder": true,
+    "canEditFinancials": true,
+    "finance_canEditExpenses": true,
+    "finance_canEditCompanyOrders": true,
+    "finance_canChangePayments": true,
+    "transport_canEdit": true,
+    "transport_canDelete": true
+  },
+  "nərmin": {
+    "canEditOrder": true,
+    "canDeleteOrder": true,
+    "canEditFinancials": true,
+    "finance_canEditExpenses": true,
+    "finance_canEditCompanyOrders": true,
+    "finance_canChangePayments": true,
+    "transport_canEdit": true,
+    "transport_canDelete": true
   }
 }
