@@ -13,13 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailsModal = document.getElementById('detailsModal');
     const detailsContent = document.getElementById('detailsContent');
     const closeDetailsModalBtn = detailsModal.querySelector('.close-button');
-    const costInputs = modal.querySelectorAll('.cost-input');
-
-    // Detallı axtarış üçün elementlər
-    const filterCategorySelect = document.getElementById('filterCategory');
-    const filterMonthInput = document.getElementById('filterMonth');
-    const filterExpensesBtn = document.getElementById('filterExpensesBtn');
-    const filteredExpensesTableBody = document.getElementById('filteredExpensesTableBody');
+    const expenseItemsContainer = document.getElementById('expenseItemsContainer');
 
     // --- XƏRC PAKETLƏRİ ÜÇÜN FUNKSİYALAR ---
     const fetchAndRenderPackages = async () => {
@@ -75,87 +69,119 @@ document.addEventListener('DOMContentLoaded', () => {
             actionsCell.appendChild(deleteButton);
         });
     };
-
-    // --- FİLTRLƏNMİŞ XƏRCLƏR ÜÇÜN FUNKSİYALAR ---
-    const handleFilterExpenses = async () => {
-        const category = filterCategorySelect.value;
-        const month = filterMonthInput.value;
-
-        if (!category || !month) {
-            alert("Zəhmət olmasa, həm kateqoriya, həm də ay/il seçin.");
-            return;
-        }
-        
-        if (filteredExpensesTableBody) {
-            filteredExpensesTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Yüklənir...</td></tr>`;
-        }
-
-        try {
-            const response = await fetch(`/api/expenses/filter?category=${category}&month=${month}`);
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.message || 'Filterləmə zamanı xəta baş verdi.');
-            }
-            const filteredExpenses = await response.json();
-            renderFilteredExpensesTable(filteredExpenses);
-        } catch (error) {
-            if (filteredExpensesTableBody) {
-                filteredExpensesTableBody.innerHTML = `<tr><td colspan="4" class="error-message">${error.message}</td></tr>`;
-            }
-        }
-    };
-
-    const renderFilteredExpensesTable = (expenses) => {
-        if (!filteredExpensesTableBody) return;
-        filteredExpensesTableBody.innerHTML = '';
-        if (expenses.length === 0) {
-            filteredExpensesTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Seçilmiş filterlərə uyğun xərc tapılmadı.</td></tr>`;
-            return;
-        }
-        expenses.forEach(expense => {
-            const row = filteredExpensesTableBody.insertRow();
-            row.insertCell().textContent = new Date(expense.date).toLocaleDateString('az-AZ');
-            row.insertCell().textContent = `${expense.amount.toFixed(2)} ${expense.currency}`;
-            row.insertCell().textContent = expense.comment;
-            row.insertCell().textContent = expense.createdBy;
-        });
-    };
-
-    // --- MODAL VƏ FORM MƏNTİQİ ---
+    
     const calculateTotal = () => {
         let total = 0;
-        costInputs.forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
+        if (expenseItemsContainer) {
+            expenseItemsContainer.querySelectorAll('.cost-input').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+        }
         if (totalAmountSpan) {
             totalAmountSpan.textContent = total.toFixed(2);
         }
     };
 
+    const createExpenseItemHTML = (key, name, itemData = {}) => {
+        const entryId = `${key}-${Date.now()}${Math.random()}`;
+        const today = new Date().toISOString().split('T')[0];
+        return `
+            <div class="expense-item" data-key="${key}">
+                <label for="cost-${key}">${name}:</label>
+                <input type="number" id="cost-${key}" class="cost-input" value="${itemData.amount || 0}" step="0.01">
+                <input type="date" class="expense-date" value="${itemData.date || today}">
+                <div class="file-status-wrapper">
+                    <label for="file-${entryId}" class="file-upload-label">Çek</label>
+                    <input type="file" id="file-${entryId}" class="expense-receipt-upload" accept="image/*,application/pdf">
+                    <a href="${itemData.receiptPath || '#'}" class="view-receipt-link" target="_blank" style="display: ${itemData.receiptPath ? 'inline-flex' : 'none'};">🔗</a>
+                    <input type="hidden" class="receipt-path-input" value="${itemData.receiptPath || ''}">
+                </div>
+                <input type="text" class="comment-input" placeholder="Kimə/Nə üçün şərh..." value="${itemData.comment || ''}">
+            </div>
+        `;
+    };
+
+    const populateExpenseForm = (details = {}) => {
+        const expenseTypes = { icare: 'İcarə', kommunal: 'Kommunal', telefon: 'Telefon', ofis: 'Ofis xərcləri', reklam: 'Reklam', maas: 'Maaş', sosial_sigorta: 'Sosial sığorta', icbari_sigorta: 'İcbari sığorta', yanacaq: 'Maşın yanacaq', gunluk: 'Günlük xərclər', diger: 'Digər' };
+        if (expenseItemsContainer) {
+            expenseItemsContainer.innerHTML = '';
+            for (const [key, name] of Object.entries(expenseTypes)) {
+                expenseItemsContainer.innerHTML += createExpenseItemHTML(key, name, details[key]);
+            }
+        }
+        calculateTotal();
+    };
+    
     const openModalForCreate = () => {
+        if (!expenseForm || !modal) return;
         expenseForm.reset();
         expenseIdInput.value = '';
         modalTitle.textContent = 'Yeni Xərc Paketi';
         submitButton.textContent = 'Paketi Yadda Saxla';
-        calculateTotal();
+        populateExpenseForm();
         modal.style.display = 'flex';
     };
 
     const openModalForEdit = (pkg) => {
+        if (!expenseForm || !modal) return;
         expenseForm.reset();
         expenseIdInput.value = pkg.id;
-        
-        Object.keys(pkg.details).forEach(key => {
-            const amountInput = expenseForm.querySelector(`.cost-input[data-name="${key}"]`);
-            const commentInput = expenseForm.querySelector(`input[data-comment-for="${key}"]`);
-            if (amountInput) amountInput.value = pkg.details[key].amount || '';
-            if (commentInput) commentInput.value = pkg.details[key].comment || '';
-        });
-
-        calculateTotal();
         modalTitle.textContent = 'Xərc Paketinə Düzəliş Et';
         submitButton.textContent = 'Dəyişiklikləri Yadda Saxla';
+        populateExpenseForm(pkg.details);
         modal.style.display = 'flex';
+    };
+
+    const handleFileUpload = async (fileInput) => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const wrapper = fileInput.closest('.file-status-wrapper');
+        const link = wrapper.querySelector('.view-receipt-link');
+        const pathInput = wrapper.querySelector('.receipt-path-input');
+        const label = wrapper.querySelector('.file-upload-label');
+
+        const originalLabelText = label.textContent;
+        label.textContent = 'Yüklənir...';
+        link.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error((await response.json()).message || 'Yükləmə xətası.');
+            
+            const result = await response.json();
+            pathInput.value = result.filePath;
+            link.href = result.filePath;
+            link.style.display = 'inline-flex';
+            label.textContent = 'Dəyiş';
+        } catch (error) {
+            alert(`Xəta: ${error.message}`);
+            label.textContent = originalLabelText;
+        }
+    };
+
+    const showDetailsModal = (pkg) => {
+        if (!detailsContent || !detailsModal) return;
+        let contentHtml = '';
+        for(const key in pkg.details) {
+            const item = pkg.details[key];
+            if(item.amount > 0) {
+                 contentHtml += `
+                    <div class="info-grid">
+                        <strong>${key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong>
+                        <span>${item.amount.toFixed(2)} ${pkg.currency}</span>
+                        <strong>Tarix:</strong>
+                        <span>${item.date ? new Date(item.date).toLocaleDateString('az-AZ') : '<i>(qeyd edilməyib)</i>'}</span>
+                        <strong>Şərh:</strong>
+                        <span>${item.comment || '<i>(boş)</i>'}</span>
+                    </div><hr class="dashed">`;
+            }
+        }
+        detailsContent.innerHTML = contentHtml || '<p>Bu paketdə heç bir xərc detalı tapılmadı.</p>';
+        detailsModal.style.display = 'flex';
     };
 
     const handleDeletePackage = async (id) => {
@@ -171,36 +197,30 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Xəta: ${error.message}`);
         }
     };
-
-    const showDetailsModal = (pkg) => {
-        let contentHtml = '';
-        for(const key in pkg.details) {
-            const item = pkg.details[key];
-            if(item.amount > 0) {
-                 contentHtml += `
-                    <div class="info-grid">
-                        <strong>${key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong>
-                        <span>${item.amount.toFixed(2)} ${pkg.currency}</span>
-                        <strong>Şərh:</strong>
-                        <span>${item.comment || '<i>(boş)</i>'}</span>
-                    </div><hr class="dashed">`;
-            }
-        }
-        detailsContent.innerHTML = contentHtml || '<p>Bu paketdə heç bir xərc detalı tapılmadı.</p>';
-        detailsModal.style.display = 'flex';
-    };
     
-    // --- HADİSƏ DİNLƏYİCİLƏRİ (Elementin mövcudluğunu yoxlamaqla) ---
-    if (costInputs) costInputs.forEach(input => input.addEventListener('input', calculateTotal));
-    if (showModalBtn) showModalBtn.addEventListener('click', openModalForCreate);
-    if (closeModalBtn) closeModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    if (closeDetailsModalBtn) closeDetailsModalBtn.addEventListener('click', () => { detailsModal.style.display = 'none'; });
+    // --- Hadisə Dinləyiciləri ---
+    if(showModalBtn) showModalBtn.addEventListener('click', openModalForCreate);
+    if(closeModalBtn) closeModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if(closeDetailsModalBtn) closeDetailsModalBtn.addEventListener('click', () => { detailsModal.style.display = 'none'; });
     
     window.addEventListener('click', (e) => { 
-        if (e.target === modal) modal.style.display = 'none'; 
-        if (e.target === detailsModal) detailsModal.style.display = 'none';
+        if (modal && e.target === modal) modal.style.display = 'none'; 
+        if (detailsModal && e.target === detailsModal) detailsModal.style.display = 'none';
     });
     
+    if (expenseItemsContainer) {
+        expenseItemsContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('expense-receipt-upload')) {
+                handleFileUpload(e.target);
+            }
+        });
+        expenseItemsContainer.addEventListener('input', (e) => {
+            if (e.target.classList.contains('cost-input')) {
+                calculateTotal();
+            }
+        });
+    }
+
     if (expenseForm) {
         expenseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -209,12 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const method = id ? 'PUT' : 'POST';
             
             const details = {};
-            costInputs.forEach(input => {
-                const name = input.dataset.name;
-                const commentInput = expenseForm.querySelector(`input[data-comment-for="${name}"]`);
-                details[name] = {
-                    amount: parseFloat(input.value) || 0,
-                    comment: commentInput.value.trim()
+            expenseItemsContainer.querySelectorAll('.expense-item').forEach(item => {
+                const key = item.dataset.key;
+                details[key] = {
+                    amount: parseFloat(item.querySelector('.cost-input').value) || 0,
+                    comment: item.querySelector('.comment-input').value.trim(),
+                    receiptPath: item.querySelector('.receipt-path-input').value.trim(),
+                    date: item.querySelector('.expense-date').value
                 };
             });
 
@@ -225,12 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(packageData)
-                });
-
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(packageData) });
                 if (!response.ok) {
                     const err = await response.json();
                     throw new Error(err.message || 'Əməliyyat uğursuz oldu.');
@@ -243,10 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`Xəta: ${error.message}`);
             }
         });
-    }
-
-    if (filterExpensesBtn) {
-        filterExpensesBtn.addEventListener('click', handleFilterExpenses);
     }
 
     // Səhifə yüklənəndə ilkin məlumatları gətir
