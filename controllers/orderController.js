@@ -352,6 +352,8 @@ exports.getOrdersByCompany = (req, res) => {
         
         const summary = {
             totalOrders: filteredOrders.length,
+            totalAlish: { AZN: 0, USD: 0, EUR: 0 },
+            totalSatish: { AZN: 0, USD: 0, EUR: 0 },
             totalGelir: { AZN: 0, USD: 0, EUR: 0 },
             totalDebt: { AZN: 0, USD: 0, EUR: 0 }
         };
@@ -359,6 +361,16 @@ exports.getOrdersByCompany = (req, res) => {
         const ordersWithDetails = filteredOrders.map(order => {
             const patchedOrder = ensurePaymentDetails(order);
             const gelir = calculateGelir(patchedOrder);
+            
+            const alishData = patchedOrder.alish || { amount: 0, currency: 'AZN' };
+            const satishData = patchedOrder.satish || { amount: 0, currency: 'AZN' };
+
+            if (alishData.currency && summary.totalAlish[alishData.currency] !== undefined) {
+                summary.totalAlish[alishData.currency] += (alishData.amount || 0);
+            }
+            if (satishData.currency && summary.totalSatish[satishData.currency] !== undefined) {
+                summary.totalSatish[satishData.currency] += (satishData.amount || 0);
+            }
             
             if (gelir.currency && summary.totalGelir[gelir.currency] !== undefined) {
                 summary.totalGelir[gelir.currency] += gelir.amount;
@@ -483,5 +495,40 @@ exports.updateHotelConfirmation = (req, res) => {
     } catch (error) {
         console.error("Sənəd linki saxlanılarkən xəta:", error);
         res.status(500).json({ message: "Serverdə daxili xəta baş verdi." });
+    }
+};
+
+exports.markAllCompanyOrdersAsPaid = (req, res) => {
+    const { companyName } = req.params;
+    const { username, role } = req.session.user;
+    const userPermissions = fileStore.getPermissions()[username] || {};
+
+    if (role !== 'owner' && !userPermissions.finance_canChangePayments) {
+        return res.status(403).json({ message: "Bütün sifarişlərin ödəniş statusunu dəyişməyə icazəniz yoxdur." });
+    }
+
+    try {
+        let orders = fileStore.getOrders();
+        let updatedCount = 0;
+
+        orders.forEach(order => {
+            if (order.xariciSirket === companyName && order.paymentStatus !== 'Ödənilib') {
+                order.paymentStatus = 'Ödənilib';
+                updatedCount++;
+            }
+        });
+
+        if (updatedCount > 0) {
+            fileStore.saveAllOrders(orders);
+            const logMessage = `<b>${companyName}</b> şirkətinin <b>${updatedCount}</b> ədəd sifarişini "Ödənilib" olaraq işarələdi.`;
+            telegram.sendLog(telegram.formatLog(req.session.user, logMessage));
+            logAction(req, 'BULK_MARK_AS_PAID', { company: companyName, count: updatedCount });
+        }
+
+        res.status(200).json({ message: `${updatedCount} sifariş uğurla "Ödənilib" olaraq yeniləndi.` });
+
+    } catch (error) {
+        console.error("Şirkət sifarişləri ödənilmiş olaraq işarələnərkən xəta:", error);
+        res.status(500).json({ message: 'Serverdə daxili xəta baş verdi.' });
     }
 };
