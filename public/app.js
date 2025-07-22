@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentOrders = [];
     let editingOrderId = null;
     let wanderingInterval = null;
-    let stealAnimationTimeout = null; 
 
     // --- DOM Elementləri ---
     const addOrderForm = document.getElementById('addOrderForm');
@@ -111,16 +110,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             headerTitle.textContent = currentUserDisplayName;
         }
         
-        if (currentUserRole === 'owner' || currentUserRole === 'finance') {
-             const navFinanceBtn = document.getElementById('navFinanceBtn');
-             if (navFinanceBtn) navFinanceBtn.style.display = 'inline-block';
-             if (navTransportBtn) navTransportBtn.style.display = 'inline-block';
+        const navFinanceBtn = document.getElementById('navFinanceBtn');
+        if (navFinanceBtn && (currentUserRole === 'owner' || currentUserRole === 'finance')) {
+             navFinanceBtn.style.display = 'inline-flex';
         }
-
     } catch (error) {
         console.error('Giriş bilgileri veya izinler alınamadı:', error);
         window.location.href = '/login.html';
-        return;
     }
     
     // --- TƏNZİMLƏMƏLƏR PANELİ MƏNTİQİ ---
@@ -235,9 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             input.name = `tourist_${i}`;
             input.required = true;
             input.placeholder = `Turist ${i + 1}`;
-            if (tourists[i]) {
-                input.value = tourists[i];
-            }
+            if (tourists[i]) input.value = tourists[i];
             inputGroup.appendChild(label);
             inputGroup.appendChild(input);
             touristsContainer.appendChild(inputGroup);
@@ -288,33 +282,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calculateTotalCost = () => {
         let total = 0;
         document.querySelectorAll('#addOrderForm .cost-input').forEach(input => {
-            if (!input.disabled) {
-                total += parseFloat(input.value) || 0;
-            }
+            if (!input.disabled) total += parseFloat(input.value) || 0;
         });
         const alishAmountInput = document.getElementById('alishAmount');
         if (alishAmountInput) alishAmountInput.value = total.toFixed(2);
     };
 
     const resetModalToCreateMode = () => {
-        try {
-            if (addOrderForm) addOrderForm.reset();
-            if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
-            addHotelEntry();
-            calculateTotalCost();
-            if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
-            if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
-            editingOrderId = null;
-            document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
-            
-            const alishAmountInput = document.getElementById('alishAmount');
-            if(alishAmountInput) alishAmountInput.readOnly = true;
-
-            updateTouristNameInputs();
-        } catch (error) {
-            console.error("Sifariş forması sıfırlanarkən xəta:", error);
-            alert("Sifariş forması hazırlanarkən xəta baş verdi. Zəhmət olmasa, konsola baxın.");
-        }
+        if (addOrderForm) addOrderForm.reset();
+        if (hotelEntriesContainer) hotelEntriesContainer.innerHTML = '';
+        addHotelEntry();
+        calculateTotalCost();
+        if (modalTitle) modalTitle.textContent = i18n.t('modalTitleNewOrder');
+        if (modalSubmitButton) modalSubmitButton.textContent = i18n.t('addOrderButton');
+        editingOrderId = null;
+        document.querySelectorAll('#addOrderForm input, #addOrderForm select, #addOrderForm textarea').forEach(el => el.disabled = false);
+        const alishAmountInput = document.getElementById('alishAmount');
+        if(alishAmountInput) alishAmountInput.readOnly = true;
+        updateTouristNameInputs();
     };
     
     const fetchOrdersAndRender = async () => {
@@ -330,16 +315,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let filteredOrders = currentOrders;
 
-            if (filterRezNo) {
-                filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
-            }
-            if(filterDate){
-                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
-            } else if (filterMonth){
-                filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
-            } else if (filterYear){
-                 filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
-            }
+            if (filterRezNo) filteredOrders = filteredOrders.filter(o => o.rezNomresi?.toLowerCase().includes(filterRezNo));
+            if(filterDate) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterDate));
+            else if (filterMonth) filteredOrders = filteredOrders.filter(o => o.creationTimestamp.startsWith(filterMonth));
+            else if (filterYear) filteredOrders = filteredOrders.filter(o => new Date(o.creationTimestamp).getFullYear() == filterYear);
 
             renderOrdersTable(filteredOrders);
         } catch (error) {
@@ -565,17 +544,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         companyReportResult.style.display = 'none';
         companyReportSummary.style.display = 'none';
         const tableBody = document.getElementById('companyOrdersTableBody');
-        tableBody.innerHTML = '<tr><td colspan="15" style="text-align:center;">Yüklənir...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Yüklənir...</td></tr>';
         companyReportResult.style.display = 'block';
         try {
             const response = await fetch(`/api/reports/by-company?company=${encodeURIComponent(selectedCompany)}`);
             if (!response.ok) throw new Error('Sifarişlər yüklənərkən xəta baş verdi.');
             const { orders, summary } = await response.json();
+            currentOrders = orders;
             renderCompanySummary(summary, selectedCompany);
             renderOrdersTable(orders, 'companyOrdersTableBody');
         } catch (error) {
             alert(error.message);
-            tableBody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:red;">${error.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">${error.message}</td></tr>`;
         }
     };
     
@@ -583,11 +563,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!companyReportSummary) return;
         companyReportSummary.innerHTML = '';
         let html = `<div class="stat-card"><h4>${companyName}</h4><p style="font-size: 1.5em; font-weight: 700;">Cəmi ${summary.totalOrders} sifariş</p></div>`;
+        
         Object.keys(summary.totalGelir).forEach(currency => {
-            if (summary.totalGelir[currency] !== 0 || summary.totalDebt[currency] !== 0) {
-                html += `<div class="currency-card"><h4>Yekun (${currency})</h4><p><span>Cəmi Gəlir:</span> <strong class="${summary.totalGelir[currency] < 0 ? 'text-danger' : 'text-success'}">${summary.totalGelir[currency].toFixed(2)}</strong></p><p><span>Cəmi Borc:</span> <strong class="text-danger">${summary.totalDebt[currency].toFixed(2)}</strong></p></div>`;
+            if (summary.totalAlish[currency] || summary.totalSatish[currency] || summary.totalGelir[currency] || summary.totalDebt[currency]) {
+                html += `
+                    <div class="currency-card">
+                        <h4>Yekun (${currency})</h4>
+                        <p><span>Cəmi Alış:</span> <strong>${(summary.totalAlish[currency] || 0).toFixed(2)}</strong></p>
+                        <p><span>Cəmi Satış:</span> <strong>${(summary.totalSatish[currency] || 0).toFixed(2)}</strong></p>
+                        <p><span>Cəmi Gəlir:</span> <strong class="${summary.totalGelir[currency] < 0 ? 'text-danger' : 'text-success'}">${summary.totalGelir[currency].toFixed(2)}</strong></p>
+                        <p><span>Cəmi Borc:</span> <strong class="text-danger">${summary.totalDebt[currency].toFixed(2)}</strong></p>
+                    </div>
+                `;
             }
         });
+        
         companyReportSummary.innerHTML = html;
         companyReportSummary.style.display = 'grid';
     };
