@@ -18,22 +18,38 @@ const transporter = nodemailer.createTransport({
 
 // --- Authentication ---
 exports.login = (req, res) => {
-    const { username, password } = req.body;
-    const users = fileStore.getUsers();
-    const user = users[username];
+    try {
+        const { username, password } = req.body;
+        const users = fileStore.getUsers();
+        const user = users[username];
 
-    if (user && bcrypt.compareSync(password, user.password)) {
-        req.session.user = { username, role: user.role, displayName: user.displayName };
-        logAction(req, 'LOGIN_SUCCESS');
-        telegram.sendLog(telegram.formatLog(req.session.user, 'sistemə daxil oldu.'));
+        if (user && bcrypt.compareSync(password, user.password)) {
+            // Sessiya məlumatlarını təyin edirik
+            req.session.user = { username, role: user.role, displayName: user.displayName };
+            
+            // Sessiyanı manual olaraq yadda saxlayırıq və sonra yönləndiririk
+            req.session.save(err => {
+                if (err) {
+                    console.error("Sessiya yadda saxlanılarkən xəta:", err);
+                    return res.redirect('/login.html?error=true');
+                }
 
-        if (user.role === 'finance') {
-            res.redirect('/finance.html');
+                logAction(req, 'LOGIN_SUCCESS');
+                telegram.sendLog(telegram.formatLog(req.session.user, 'sistemə daxil oldu.'));
+
+                if (user.role === 'finance') {
+                    res.redirect('/finance.html');
+                } else {
+                    res.redirect('/');
+                }
+            });
+            
         } else {
-            res.redirect('/');
+            console.warn(`Uğursuz giriş cəhdi: İstifadəçi adı - ${username}`);
+            res.redirect('/login.html?error=true');
         }
-        
-    } else {
+    } catch (error) {
+        console.error("Giriş zamanı kritik xəta:", error);
         res.redirect('/login.html?error=true');
     }
 };
