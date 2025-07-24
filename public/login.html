@@ -1,165 +1,125 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const showPasswordCheckbox = document.getElementById('show-password');
-    const passwordInput = document.getElementById('password');
-    const errorMessageDiv = document.getElementById('error-message');
-
-    // Şifrəni göstər/gizlə
-    if (showPasswordCheckbox && passwordInput) {
-        showPasswordCheckbox.addEventListener('change', () => {
-            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
-        });
-    }
-
-    // URL-dən xəta mesajını yoxla
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('error')) {
-        errorMessageDiv.textContent = 'İstifadəçi adı və ya şifrə yanlışdır.';
-        errorMessageDiv.style.display = 'block';
-    }
-
-    // Animasiya üçün buludları yarat
-    const animationContainer = document.getElementById('animation-container');
-    if (animationContainer) {
-        const cloudCount = 15; // Buludların sayı
-        for (let i = 0; i < cloudCount; i++) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            
-            const size = Math.random() * 150 + 50; // 50px - 200px arası ölçü
-            const top = Math.random() * 80; // 0% - 80% arası hündürlük
-            const duration = Math.random() * 50 + 30; // 30s - 80s arası hərəkət müddəti
-            const delay = Math.random() * 30; // 0s - 30s arası başlama gecikməsi
-
-            cloud.style.width = `${size}px`;
-            cloud.style.height = `${size * 0.6}px`;
-            cloud.style.top = `${top}%`;
-            cloud.style.animationDuration = `${duration}s`;
-            cloud.style.animationDelay = `-${delay}s`;
-            
-            cloud.style.left = `${Math.random() * -500}px`;
-
-            animationContainer.appendChild(cloud);
+<!DOCTYPE html>
+<html lang="az" class="login-page-html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-key="loginTitle">Sistemə Giriş</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --primary-action-color: #3b82f6;
+            --primary-action-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --border-color: #e5e7eb;
+            --border-radius: 8px;
         }
-        
-        // Paraşütlərin yaradılması məntiqi
-        const parachuteSVG = `
-            <svg class="parachute-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 10 50 A 40 20 0 1 1 90 50" fill="#FFD700" stroke="#DAA520" stroke-width="2"/>
-                <path d="M 50 50 L 30 90" stroke="#8B4513" stroke-width="1"/>
-                <path d="M 50 50 L 70 90" stroke="#8B4513" stroke-width="1"/>
-                <path d="M 50 50 L 50 90" stroke="#8B4513" stroke-width="1"/>
-            </svg>
-        `;
-        
-        const triggerParachuteDrop = () => {
-            const planeContainer = document.querySelector('.plane-container');
-            if (!planeContainer) return;
+        .login-page-html, .login-page-body { overflow: hidden; }
+        .login-page-body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: var(--primary-font); background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 100%); }
+        #animation-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
+        .sky { position: relative; width: 100%; height: 100%; }
+        .plane-container { position: absolute; top: 25%; width: 200px; height: auto; animation: fly 30s linear infinite; animation-delay: 1s; z-index: 3; }
+        .plane-container img { width: 100%; filter: drop-shadow(3px 5px 8px rgba(0,0,0,0.3)); }
+        .mascot-animation-container { position: absolute; width: 120px; height: auto; animation: mascot-peek 20s ease-in-out infinite; z-index: 4; }
+        .mascot-animation-container img { width: 100%; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2)); }
+        .cloud { position: absolute; background: white; border-radius: 50%; opacity: 0.8; filter: blur(2px); animation: move-clouds linear infinite; z-index: 2; }
+        .parachute-drop { position: absolute; top: -250px; display: flex; flex-direction: column; align-items: center; z-index: 11; animation: fall-and-swing 15s linear forwards; }
+        .parachute-drop .parachute-svg { width: 150px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2)); }
+        .parachute-drop .logo-payload { width: 90px; margin-top: -15px; }
+        .login-container { position: relative; z-index: 10; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 35px 45px; padding-top: 50px; border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.18); }
+        .login-container h1 { margin-top: 0; margin-bottom: 30px; color: var(--text-primary); font-size: 2em; font-weight: 600; }
+        .login-container .input-group { margin-bottom: 20px; text-align: left; }
+        .login-container label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); font-size: 0.95em; }
+        .login-container input[type="text"], .login-container input[type="password"], .login-container input[type="email"], .login-container select { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 1em; background-color: #f9fafb; }
+        .login-container input:focus, .login-container select:focus { border-color: var(--primary-action-color); outline: 0; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
+        .login-container button { width: 100%; padding: 12px 15px; background-color: var(--primary-action-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: 500; transition: background-color 0.2s ease-in-out; }
+        .login-container button:hover { background-color: var(--primary-action-hover); }
+        .error-message { color: var(--danger-hover); background-color: #fee2e2; border: 1px solid var(--danger-color); padding: 10px; margin-top: 20px; border-radius: 6px; font-size: 0.9em; text-align: center; }
+        .links-container { margin-top: 20px; }
+        .permissions-link { display: block; margin-top: 10px; color: var(--text-secondary); text-decoration: none; font-size: 0.9em; cursor: pointer; }
+        .permissions-link:hover { text-decoration: underline; }
+        .password-wrapper { position: relative; width: 100%; }
+        .input-group-checkbox { display: flex; align-items: center; justify-content: flex-start; margin-top: -10px; margin-bottom: 20px; font-size: 0.9em; }
+        .input-group-checkbox input { margin-right: 8px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
+        .modal.is-open { display: flex; }
+        .modal-content { background-color: #ffffff; padding: 35px; border: none; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: var(--shadow-md); position: relative; }
+        .modal-content h3 { margin-top: 0; font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; }
+        .close-button { color: #9ca3af; float: right; font-size: 32px; font-weight: bold; transition: color 0.2s; position: absolute; top: 15px; right: 25px; cursor: pointer; }
+        .close-button:hover { color: var(--text-primary); }
+        .modal-content button { margin-top: 20px; }
+        .modal-message { margin-top: 15px; padding: 10px; border-radius: 6px; font-size: 0.9em; display: none; }
+        .modal-message.success { background-color: #d1fae5; color: #065f46; }
+        .modal-message.error { background-color: #fee2e2; color: #991b1b; }
+        @keyframes fly { 0% { left: -250px; transform: translateY(0px) scale(0.9); } 50% { transform: translateY(-30px) scale(1); } 100% { left: 100vw; transform: translateY(20px) scale(0.9); } }
+        @keyframes move-clouds { 0% { transform: translateX(-250px); } 100% { transform: translateX(100vw); } }
+        @keyframes mascot-peek { 0%, 100% { right: -150px; bottom: 10%; transform: rotate(20deg); } 20%, 80% { right: 30px; bottom: 15%; transform: rotate(-10deg) scale(1.1); } 50% { transform: rotate(5deg) scale(1) translateY(-15px); } }
+        @keyframes fall-and-swing { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; } 20% { transform: translateY(20vh) translateX(20px) rotate(5deg); } 40% { transform: translateY(40vh) translateX(-20px) rotate(-5deg); } 60% { transform: translateY(60vh) translateX(20px) rotate(5deg); } 80% { transform: translateY(80vh) translateX(-20px) rotate(-5deg); } 100% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; } }
+    </style>
+</head>
+<body class="login-page-body">
 
-            const planeRect = planeContainer.getBoundingClientRect();
+    <div id="animation-container">
+        <div class="sky">
+            <div class="plane-container"><img src="images/plane.png" alt="Airplane"></div>
+            <div class="mascot-animation-container"><img src="images/mascot.png" alt="Azerweys Logo"></div>
+        </div>
+    </div>
+    
+    <div class="login-container">
+        <h1>Sistemə Giriş</h1>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <form action="/login" method="POST">
+            <div class="input-group"><label for="username">İstifadəçi adı</label><input type="text" id="username" name="username" required></div>
+            <div class="input-group"><label for="password">Şifrə</label><div class="password-wrapper"><input type="password" id="password" name="password" required></div></div>
+            <div class="input-group-checkbox"><input type="checkbox" id="show-password"><label for="show-password">Şifrəni göstər</label></div>
+            <button type="submit">Daxil Ol</button>
+        </form>
+        <div class="links-container">
+            <a href="/forgot-password.html" class="permissions-link">Şifrəni unutdum?</a>
+            <a href="/permissions.html" class="permissions-link">İcazələri İdarə Et</a>
+            <a href="#" id="showCreateUserModalBtn" class="permissions-link">Yeni İstifadəçi Yarat</a>
+        </div>
+    </div>
 
-            if (planeRect.left > 0 && planeRect.right < window.innerWidth) {
-                const parachute = document.createElement('div');
-                parachute.className = 'parachute-drop';
-                
-                parachute.innerHTML = `
-                    ${parachuteSVG}
-                    <img src="images/mascot.png" alt="Logo" class="logo-payload">
-                `;
-                
-                parachute.style.left = `${planeRect.left + (planeRect.width / 2) - 50}px`;
-                parachute.style.top = `${planeRect.bottom}px`;
-                
-                animationContainer.appendChild(parachute);
-                
-                parachute.addEventListener('animationend', () => {
-                    parachute.remove();
-                });
-            }
-        };
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="ownerAccessPrompt">
+                <h3>Sahibkar Təsdiqləməsi</h3>
+                <p>Yeni istifadəçi yaratmaq üçün sahibkar parolunu daxil edin.</p>
+                <form id="ownerAccessForm">
+                    <div class="input-group"><label for="ownerPassword">Parol:</label><input type="password" id="ownerPassword" required></div>
+                    <button type="submit">Təsdiqlə</button>
+                </form>
+            </div>
+            <div id="addUserFormContainer" style="display: none;">
+                <h3>Yeni İstifadəçi Əlavə Et</h3>
+                <form id="addUserForm">
+                    <div class="input-group"><label for="newUsername">İstifadəçi Adı (login):</label><input type="text" id="newUsername" required></div>
+                    <div class="input-group"><label for="newDisplayName">Görünən Ad:</label><input type="text" id="newDisplayName" required></div>
+                    <div class="input-group"><label for="newEmail">E-poçt:</label><input type="email" id="newEmail" required></div>
+                    <div class="input-group"><label for="newPassword">Şifrə (min. 6 simvol):</label><input type="password" id="newPassword" required></div>
+                    <div class="input-group"><label for="newRole">Rol:</label>
+                        <select id="newRole" required>
+                            <option value="sales_manager">Satış Meneceri</option>
+                            <option value="finance">Maliyyəçi</option>
+                            <option value="editor">Redaktor</option>
+                        </select>
+                    </div>
+                    <button type="submit">İstifadəçini Yarat</button>
+                </form>
+            </div>
+            <div id="modalMessage" class="modal-message"></div>
+        </div>
+    </div>
 
-        setInterval(triggerParachuteDrop, 8000);
-    }
-
-    // --- Yeni İstifadəçi Yaratma Modalı Məntiqi ---
-    const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
-    const createUserModal = document.getElementById('createUserModal');
-    const closeCreateUserModalBtn = createUserModal.querySelector('.close-button');
-    const ownerAccessPrompt = document.getElementById('ownerAccessPrompt');
-    const addUserFormContainer = document.getElementById('addUserFormContainer');
-    const ownerAccessForm = document.getElementById('ownerAccessForm');
-    const addUserForm = document.getElementById('addUserForm');
-    const modalMessage = document.getElementById('modalMessage');
-
-    const showModalMessage = (message, isSuccess) => {
-        modalMessage.textContent = message;
-        modalMessage.className = `modal-message ${isSuccess ? 'success' : 'error'}`;
-        modalMessage.style.display = 'block';
-    };
-
-    const resetModal = () => {
-        ownerAccessPrompt.style.display = 'block';
-        addUserFormContainer.style.display = 'none';
-        modalMessage.style.display = 'none';
-        ownerAccessForm.reset();
-        addUserForm.reset();
-    };
-
-    showCreateUserModalBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        resetModal();
-        createUserModal.classList.add('is-open');
-    });
-
-    closeCreateUserModalBtn.addEventListener('click', () => {
-        createUserModal.classList.remove('is-open');
-    });
-
-    ownerAccessForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const password = document.getElementById('ownerPassword').value;
-        try {
-            const response = await fetch('/api/verify-owner', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-
-            ownerAccessPrompt.style.display = 'none';
-            addUserFormContainer.style.display = 'block';
-            modalMessage.style.display = 'none';
-        } catch (error) {
-            showModalMessage(error.message || 'Parol təsdiqlənərkən xəta baş verdi.', false);
-        }
-    });
-
-    addUserForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const userData = {
-            username: document.getElementById('newUsername').value,
-            displayName: document.getElementById('newDisplayName').value,
-            email: document.getElementById('newEmail').value,
-            password: document.getElementById('newPassword').value,
-            role: document.getElementById('newRole').value
-        };
-
-        try {
-            const response = await fetch('/api/users/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-
-            showModalMessage(result.message, true);
-            setTimeout(() => {
-                createUserModal.classList.remove('is-open');
-            }, 2000);
-
-        } catch (error) {
-            showModalMessage(error.message || 'İstifadəçi yaradılarkən xəta baş verdi.', false);
-        }
-    });
-});
+    <script src="login-features.js"></script>
+    <script src="i18n.js"></script>
+</body>
+</html>
