@@ -62,7 +62,6 @@ const initializeApp = () => {
 app.post('/login', userController.login);
 app.get('/logout', userController.logout);
 
-// DÜZGÜN MARŞRUTLAR
 app.get('/', requireLogin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/users', requireLogin, requireOwnerRole, (req, res) => res.sendFile(path.join(__dirname, 'public', 'users.html')));
 app.get('/permissions', requireLogin, requireOwnerRole, (req, res) => res.sendFile(path.join(__dirname, 'public', 'permissions.html')));
@@ -106,6 +105,7 @@ wss.on('connection', (ws) => {
 
 server.listen(PORT, () => {
     initializeApp();
+    // DÜZƏLİŞ BURADADIR: telegramService.init() sətri silindi.
     startBackupSchedule(2); // Hər 2 dəqiqədən bir yedəkləmə
     console.log(`Server http://localhost:${PORT} ünvanında işləyir`);
 });
