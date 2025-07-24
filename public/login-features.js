@@ -1,177 +1,200 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    // --- DİL TƏRCÜMƏSİ VƏ SEÇİMİ ---
-    // Tərcümə fayllarını yüklə və səhifəni ilkin olaraq tərcümə et
-    await i18n.loadTranslations(localStorage.getItem('lang') || 'az');
-    i18n.translatePage();
-
-    // Dil seçimi menyusunu aktivləşdir
-    i18n.setupLanguageSwitcher('lang-switcher-login', () => {});
-
-
-    // --- MASKOT VƏ ŞİFRƏ GÖSTƏRMƏ KODU ---
-    const mascotContainer = document.querySelector('.mascot-login-container');
-    const mascotImage = document.getElementById('loginMascot');
+document.addEventListener('DOMContentLoaded', () => {
+    const showPasswordCheckbox = document.getElementById('show-password');
     const passwordInput = document.getElementById('password');
-    const showPasswordToggle = document.getElementById('showPasswordToggle');
-    const mascotBubble = document.getElementById('loginMascotBubble'); // Balonu əldə edirik
+    const errorMessageDiv = document.getElementById('error-message');
+    const loginForm = document.querySelector('form[action="/login"]');
 
-    // MASKOT ANİMASİYALARI
-    if (mascotContainer) {
-        // Səhifə yükləndikdə maskotun başını çıxarması
-        setTimeout(() => {
-            mascotContainer.style.bottom = '-40px'; 
-
-            // Maskot göründükdən bir müddət sonra balonu göstər
-            if (mascotBubble) {
-                setTimeout(() => {
-                    mascotBubble.style.opacity = '1';
-                }, 700); // 0.7 saniyə sonra
-            }
-        }, 500);
-    }
-
-    if (showPasswordToggle && passwordInput && mascotImage) {
-        // Şifrəyə baxmaq üçün checkbox dəyişdikdə
-        showPasswordToggle.addEventListener('change', () => {
-            if (showPasswordToggle.checked) {
-                passwordInput.type = 'text';
-                // Qeyd: Bu şəkillər `public` qovluğunun içindəki `images` qovluğunda olmalıdır.
-                // Məsələn: public/images/mascot-eye-open.png
-                mascotImage.src = 'images/mascot-eye-open.png'; 
-            } else {
-                passwordInput.type = 'password';
-                // Orijinal şəkli geri qaytarır.
-                mascotImage.src = 'mascot.png';
-            }
+    // Şifrəni göstər/gizlə
+    if (showPasswordCheckbox && passwordInput) {
+        showPasswordCheckbox.addEventListener('change', () => {
+            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
         });
     }
 
-    // --- YENİ İSTİFADƏÇİ YARATMA MODALI ÜÇÜN KOD ---
-    const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
-    const createUserModal = document.getElementById('createUserModal');
-    
-    if (createUserModal) {
-        const closeModalBtn = createUserModal.querySelector('.close-button');
-        const step1 = document.getElementById('step1-owner-verify');
-        const step2 = document.getElementById('step2-registration-form');
-        const ownerVerifyForm = document.getElementById('ownerVerifyForm');
-        const modalOwnerPassword = document.getElementById('modalOwnerPassword');
-        const modalErrorMessage = document.getElementById('modalErrorMessage');
-        const registrationForm = document.getElementById('registrationForm');
-        const regRoleSelect = document.getElementById('regRole');
-        const regNewRoleInput = document.getElementById('regNewRole');
-        const regMessage = document.getElementById('regMessage');
-
-        const showModal = () => createUserModal.style.display = 'flex';
-        const hideModal = () => {
-            createUserModal.style.display = 'none';
-            step1.style.display = 'block';
-            step2.style.display = 'none';
-            ownerVerifyForm.reset();
-            registrationForm.reset();
-            modalErrorMessage.textContent = '';
-            regMessage.textContent = '';
-            regNewRoleInput.style.display = 'none';
-        };
-
-        if (showCreateUserModalBtn) {
-            showCreateUserModalBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                showModal();
-            });
-        }
-
-        if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-        window.addEventListener('click', (e) => {
-            if (e.target === createUserModal) {
-                hideModal();
-            }
-        });
-
-        ownerVerifyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            modalErrorMessage.textContent = '';
-            try {
-                const response = await fetch('/api/verify-owner', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: modalOwnerPassword.value })
-                });
-
-                if (response.ok) {
-                    step1.style.display = 'none';
-                    step2.style.display = 'block';
-                } else {
-                    const err = await response.json();
-                    modalErrorMessage.textContent = err.message || 'Parol yanlışdır.';
-                    modalErrorMessage.style.color = 'red';
-                }
-            } catch (error) {
-                modalErrorMessage.textContent = 'Server xətası.';
-                modalErrorMessage.style.color = 'red';
-            }
-        });
-
-        regRoleSelect.addEventListener('change', () => {
-            if (regRoleSelect.value === 'new_role') {
-                regNewRoleInput.style.display = 'block';
-                regNewRoleInput.required = true;
-            } else {
-                regNewRoleInput.style.display = 'none';
-                regNewRoleInput.required = false;
-            }
-        });
-
-        registrationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            regMessage.textContent = '';
-            
-            let roleValue = regRoleSelect.value;
-            if (roleValue === 'new_role') {
-                roleValue = regNewRoleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
-                if (!roleValue) {
-                    regMessage.textContent = 'Yeni vəzifə adı boş ola bilməz.';
-                    regMessage.style.color = 'red';
-                    return;
-                }
-            }
-
-            const userData = {
-                displayName: document.getElementById('regDisplayName').value,
-                username: document.getElementById('regUsername').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value,
-                role: roleValue
-            };
-
-            try {
-                const response = await fetch('/api/users/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    regMessage.textContent = result.message;
-                    regMessage.style.color = 'green';
-                    setTimeout(hideModal, 2000);
-                } else {
-                    regMessage.textContent = result.message || 'Xəta baş verdi.';
-                    regMessage.style.color = 'red';
-                }
-            } catch (error) {
-                regMessage.textContent = 'Server xətası.';
-                regMessage.style.color = 'red';
-            }
-        });
-    }
-
-    // --- Login forması səhvini göstərmək üçün kod ---
+    // URL-dən köhnə xəta mesajını yoxla (əgər varsa)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('error')) {
-        const errorMessageContainer = document.getElementById('errorMessageContainer');
-        if (errorMessageContainer) {
-            errorMessageContainer.innerHTML = `<div class="error-message">${i18n.t('loginError')}</div>`;
-        }
+        errorMessageDiv.textContent = 'İstifadəçi adı və ya şifrə yanlışdır.';
+        errorMessageDiv.style.display = 'block';
     }
+
+    // Giriş formasını JavaScript ilə idarə edirik
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Standart form göndərməni dayandırırıq
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            errorMessageDiv.style.display = 'none'; // Köhnə xətanı gizlədirik
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Uğurlu olduqda, serverdən gələn ünvana yönləndiririk
+                    window.location.href = result.redirectUrl;
+                } else {
+                    // Uğursuz olduqda, serverdən gələn xəta mesajını göstəririk
+                    errorMessageDiv.textContent = result.message;
+                    errorMessageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessageDiv.textContent = 'Serverlə əlaqə qurmaq mümkün olmadı.';
+                errorMessageDiv.style.display = 'block';
+            }
+        });
+    }
+
+    // Animasiya üçün buludları yarat
+    const animationContainer = document.getElementById('animation-container');
+    if (animationContainer) {
+        const cloudCount = 15; // Buludların sayı
+        for (let i = 0; i < cloudCount; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            
+            const size = Math.random() * 150 + 50; // 50px - 200px arası ölçü
+            const top = Math.random() * 80; // 0% - 80% arası hündürlük
+            const duration = Math.random() * 50 + 30; // 30s - 80s arası hərəkət müddəti
+            const delay = Math.random() * 30; // 0s - 30s arası başlama gecikməsi
+
+            cloud.style.width = `${size}px`;
+            cloud.style.height = `${size * 0.6}px`;
+            cloud.style.top = `${top}%`;
+            cloud.style.animationDuration = `${duration}s`;
+            cloud.style.animationDelay = `-${delay}s`;
+            
+            cloud.style.left = `${Math.random() * -500}px`;
+
+            animationContainer.appendChild(cloud);
+        }
+        
+        // Paraşütlərin yaradılması məntiqi
+        const parachuteSVG = `
+            <svg class="parachute-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 10 50 A 40 20 0 1 1 90 50" fill="#FFD700" stroke="#DAA520" stroke-width="2"/>
+                <path d="M 50 50 L 30 90" stroke="#8B4513" stroke-width="1"/>
+                <path d="M 50 50 L 70 90" stroke="#8B4513" stroke-width="1"/>
+                <path d="M 50 50 L 50 90" stroke="#8B4513" stroke-width="1"/>
+            </svg>
+        `;
+        
+        const triggerParachuteDrop = () => {
+            const planeContainer = document.querySelector('.plane-container');
+            if (!planeContainer) return;
+
+            const planeRect = planeContainer.getBoundingClientRect();
+
+            if (planeRect.left > 0 && planeRect.right < window.innerWidth) {
+                const parachute = document.createElement('div');
+                parachute.className = 'parachute-drop';
+                
+                parachute.innerHTML = `
+                    ${parachuteSVG}
+                    <img src="/mascot.png" alt="Logo" class="logo-payload">
+                `;
+                
+                parachute.style.left = `${planeRect.left + (planeRect.width / 2) - 50}px`;
+                parachute.style.top = `${planeRect.bottom}px`;
+                
+                animationContainer.appendChild(parachute);
+                
+                parachute.addEventListener('animationend', () => {
+                    parachute.remove();
+                });
+            }
+        };
+
+        setInterval(triggerParachuteDrop, 8000);
+    }
+
+    // --- Yeni İstifadəçi Yaratma Modalı Məntiqi ---
+    const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
+    const createUserModal = document.getElementById('createUserModal');
+    const closeCreateUserModalBtn = createUserModal.querySelector('.close-button');
+    const ownerAccessPrompt = document.getElementById('ownerAccessPrompt');
+    const addUserFormContainer = document.getElementById('addUserFormContainer');
+    const ownerAccessForm = document.getElementById('ownerAccessForm');
+    const addUserForm = document.getElementById('addUserForm');
+    const modalMessage = document.getElementById('modalMessage');
+
+    const showModalMessage = (message, isSuccess) => {
+        modalMessage.textContent = message;
+        modalMessage.className = `modal-message ${isSuccess ? 'success' : 'error'}`;
+        modalMessage.style.display = 'block';
+    };
+
+    const resetModal = () => {
+        ownerAccessPrompt.style.display = 'block';
+        addUserFormContainer.style.display = 'none';
+        modalMessage.style.display = 'none';
+        ownerAccessForm.reset();
+        addUserForm.reset();
+    };
+
+    showCreateUserModalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetModal();
+        createUserModal.classList.add('is-open');
+    });
+
+    closeCreateUserModalBtn.addEventListener('click', () => {
+        createUserModal.classList.remove('is-open');
+    });
+
+    ownerAccessForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const password = document.getElementById('ownerPassword').value;
+        try {
+            const response = await fetch('/api/verify-owner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+
+            ownerAccessPrompt.style.display = 'none';
+            addUserFormContainer.style.display = 'block';
+            modalMessage.style.display = 'none';
+        } catch (error) {
+            showModalMessage(error.message || 'Parol təsdiqlənərkən xəta baş verdi.', false);
+        }
+    });
+
+    addUserForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userData = {
+            username: document.getElementById('newUsername').value,
+            displayName: document.getElementById('newDisplayName').value,
+            email: document.getElementById('newEmail').value,
+            password: document.getElementById('newPassword').value,
+            role: document.getElementById('newRole').value
+        };
+
+        try {
+            const response = await fetch('/api/users/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+
+            showModalMessage(result.message, true);
+            setTimeout(() => {
+                createUserModal.classList.remove('is-open');
+            }, 2000);
+
+        } catch (error) {
+            showModalMessage(error.message || 'İstifadəçi yaradılarkən xəta baş verdi.', false);
+        }
+    });
 });
