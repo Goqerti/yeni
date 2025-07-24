@@ -1,293 +1,125 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="az" class="login-page-html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n-key="loginTitle">Musa - Turizm Mühasibat Sistemi</title>
-    
+    <title data-i18n-key="loginTitle">Sistemə Giriş</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --primary-action-color: #3b82f6;
+            --primary-action-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --border-color: #e5e7eb;
+            --border-radius: 8px;
+        }
+        .login-page-html, .login-page-body { overflow: hidden; }
+        .login-page-body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: var(--primary-font); background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 100%); }
+        #animation-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
+        .sky { position: relative; width: 100%; height: 100%; }
+        .plane-container { position: absolute; top: 25%; width: 200px; height: auto; animation: fly 30s linear infinite; animation-delay: 1s; z-index: 3; }
+        .plane-container img { width: 100%; filter: drop-shadow(3px 5px 8px rgba(0,0,0,0.3)); }
+        .mascot-animation-container { position: absolute; width: 120px; height: auto; animation: mascot-peek 20s ease-in-out infinite; z-index: 4; }
+        .mascot-animation-container img { width: 100%; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2)); }
+        .cloud { position: absolute; background: white; border-radius: 50%; opacity: 0.8; filter: blur(2px); animation: move-clouds linear infinite; z-index: 2; }
+        .parachute-drop { position: absolute; top: -250px; display: flex; flex-direction: column; align-items: center; z-index: 11; animation: fall-and-swing 15s linear forwards; }
+        .parachute-drop .parachute-svg { width: 150px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2)); }
+        .parachute-drop .logo-payload { width: 90px; margin-top: -15px; }
+        .login-container { position: relative; z-index: 10; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 35px 45px; padding-top: 50px; border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.18); }
+        .login-container h1 { margin-top: 0; margin-bottom: 30px; color: var(--text-primary); font-size: 2em; font-weight: 600; }
+        .login-container .input-group { margin-bottom: 20px; text-align: left; }
+        .login-container label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); font-size: 0.95em; }
+        .login-container input[type="text"], .login-container input[type="password"], .login-container input[type="email"], .login-container select { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 1em; background-color: #f9fafb; }
+        .login-container input:focus, .login-container select:focus { border-color: var(--primary-action-color); outline: 0; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
+        .login-container button { width: 100%; padding: 12px 15px; background-color: var(--primary-action-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: 500; transition: background-color 0.2s ease-in-out; }
+        .login-container button:hover { background-color: var(--primary-action-hover); }
+        .error-message { color: var(--danger-hover); background-color: #fee2e2; border: 1px solid var(--danger-color); padding: 10px; margin-top: 20px; border-radius: 6px; font-size: 0.9em; text-align: center; }
+        .links-container { margin-top: 20px; }
+        .permissions-link { display: block; margin-top: 10px; color: var(--text-secondary); text-decoration: none; font-size: 0.9em; cursor: pointer; }
+        .permissions-link:hover { text-decoration: underline; }
+        .password-wrapper { position: relative; width: 100%; }
+        .input-group-checkbox { display: flex; align-items: center; justify-content: flex-start; margin-top: -10px; margin-bottom: 20px; font-size: 0.9em; }
+        .input-group-checkbox input { margin-right: 8px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
+        .modal.is-open { display: flex; }
+        .modal-content { background-color: #ffffff; padding: 35px; border: none; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: var(--shadow-md); position: relative; }
+        .modal-content h3 { margin-top: 0; font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; }
+        .close-button { color: #9ca3af; float: right; font-size: 32px; font-weight: bold; transition: color 0.2s; position: absolute; top: 15px; right: 25px; cursor: pointer; }
+        .close-button:hover { color: var(--text-primary); }
+        .modal-content button { margin-top: 20px; }
+        .modal-message { margin-top: 15px; padding: 10px; border-radius: 6px; font-size: 0.9em; display: none; }
+        .modal-message.success { background-color: #d1fae5; color: #065f46; }
+        .modal-message.error { background-color: #fee2e2; color: #991b1b; }
+        @keyframes fly { 0% { left: -250px; transform: translateY(0px) scale(0.9); } 50% { transform: translateY(-30px) scale(1); } 100% { left: 100vw; transform: translateY(20px) scale(0.9); } }
+        @keyframes move-clouds { 0% { transform: translateX(-250px); } 100% { transform: translateX(100vw); } }
+        @keyframes mascot-peek { 0%, 100% { right: -150px; bottom: 10%; transform: rotate(20deg); } 20%, 80% { right: 30px; bottom: 15%; transform: rotate(-10deg) scale(1.1); } 50% { transform: rotate(5deg) scale(1) translateY(-15px); } }
+        @keyframes fall-and-swing { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; } 20% { transform: translateY(20vh) translateX(20px) rotate(5deg); } 40% { transform: translateY(40vh) translateX(-20px) rotate(-5deg); } 60% { transform: translateY(60vh) translateX(20px) rotate(5deg); } 80% { transform: translateY(80vh) translateX(-20px) rotate(-5deg); } 100% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; } }
+    </style>
 </head>
-<body>
-    <header>
-        <h1 id="main-header-title">Musa</h1>
+<body class="login-page-body">
 
-        <div class="nav-container" id="navContainer">
-            <nav>
-                <button id="navSatishlarBtn" class="nav-element" data-i18n-key="salesNav">Satışlar</button>
-                <button id="navRezervasiyalarBtn" class="nav-element" data-i18n-key="reservationsNav">Rezervasiyalar</button>
-                <a href="/tasks.html" id="navTasksBtn" class="nav-element">Tapşırıqlar<span id="tasks-count" class="badge" style="display:none;"></span></a>
-                <a href="/transport.html" id="navTransportBtn" class="nav-element">Transport</a>
-                <button id="navBildirishlerBtn" class="nav-element" data-i18n-key="notificationsNav">
-                    Bildirişlər
-                    <span id="notification-count" class="badge" style="display:none;"></span>
-                </button>
-                <button id="navChatBtn" class="nav-element" data-i18n-key="chatNav">Chat</button>
-                <button id="navAxtarishBtn" class="nav-element" data-i18n-key="searchNav">Axtarış</button>
-                <button id="navHesabatBtn" class="nav-element" data-i18n-key="reportsNav">Hesabat</button>
-                <button id="navBorclarBtn" class="nav-element" data-i18n-key="debtsNav">Borclar</button>
-                <a href="/finance.html" id="navFinanceBtn" class="nav-element nav-btn-owner-only" style="display: none;">Maliyyə</a>
-                <button id="settingsBtn" class="nav-element" title="Tənzimləmələr"><i class="fa-solid fa-gear"></i></button>
-                <a href="/logout" class="nav-element logout-btn" data-i18n-key="logoutNav">Çıxış</a>
-                
-                <div class="lang-switcher-container-header">
-                     <div class="language-switcher" id="lang-switcher-main">
-                        <div class="selected-lang">
-                            <span id="selected-lang-text">Azərbaycanca</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <ul class="lang-options">
-                            <li data-lang="az"><span data-i18n-key="lang_az">Azərbaycanca</span></li>
-                            <li data-lang="en"><span data-i18n-key="lang_en">English</span></li>
-                            <li data-lang="ru"><span data-i18n-key="lang_ru">Русский</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
+    <div id="animation-container">
+        <div class="sky">
+            <div class="plane-container"><img src="images/plane.png" alt="Airplane"></div>
+            <div class="mascot-animation-container"><img src="images/mascot.png" alt="Azerweys Logo"></div>
         </div>
-        <button class="mobile-menu-toggle-btn" id="mobileMenuToggleBtn">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-    </header>
-
-    <main>
-        <!-- Bütün View-lar (Səhifələr) -->
-        <div id="dashboardView">
-             <div class="financial-dashboard-container">
-                <h2>Maliyyə Paneli</h2>
-                <div class="filters-container" style="margin-bottom: 20px;">
-                    <div>
-                        <label for="dashboardMonthFilter">Aya görə filterlə:</label>
-                        <input type="month" id="dashboardMonthFilter">
-                    </div>
-                    <button id="resetDashboardFilterBtn" class="filter-reset-btn">Sıfırla</button>
-                </div>
-                <div id="financialDashboard" class="summary-grid">
-                    <!-- Məlumatlar JavaScript ilə bura yüklənəcək -->
-                </div>
-            </div>
-        </div>
-
-        <div id="satishlarView" style="display: none;"> 
-            <h2 data-i18n-key="salesTableTitle">Satışlar Cədvəli</h2>
-            <div class="filters-container">
-                <div><label for="filterRezNo">Rez. №:</label><input type="text" id="filterRezNo" placeholder="Rez. nömrəsi ilə axtar..."></div>
-                <div><label for="filterYear" data-i18n-key="filterByYear">İl:</label><input type="number" id="filterYear" placeholder="YYYY" min="2000" max="2099"></div>
-                <div><label for="filterMonth" data-i18n-key="filterByMonth">Ay:</label><input type="month" id="filterMonth"></div>
-                <div><label for="filterDate" data-i18n-key="filterByDate">Tarix:</label><input type="date" id="filterDate"></div>
-                <button id="applyFiltersBtn" class="filter-apply-btn" data-i18n-key="applyFiltersButton">Filterlə</button>
-                <button id="resetFiltersBtn" class="filter-reset-btn" data-i18n-key="resetFiltersButton">Sıfırla</button>
-            </div>
-            <div class="actions"><button id="showAddOrderFormBtn" class="add-order-btn" data-i18n-key="newOrderButton">Yeni sifariş əlavə et</button></div>
-            <div class="summary-grid">
-                <div class="stat-card"><h4 data-i18n-key="totalOrders">Cəmi Sifarişlər</h4><p id="totalOrders">0</p></div>
-                <div id="totalsByCurrencyContainer" class="currency-cards-container"></div>
-            </div>
-            <div class="table-container" style="margin-top: 20px;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Satış №</th><th>Yaradılma Tarixi</th><th>Rez. №</th><th>Turist</th><th>Böyük</th><th>Uşaq</th><th>Xarici şirkət</th><th>Otel Adı (İlk)</th><th>Giriş Tarixi</th><th>Alış Qiyməti</th><th>Satış Qiyməti</th><th>Gəlir</th><th>Status</th><th>Əməliyyatlar</th><th>Qeyd</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="rezervasiyalarView" style="display: none;">
-            <h2 data-i18n-key="reservationsNav">Otel Rezervasiyaları</h2>
-            <div class="filters-container reservation-filters">
-                <div><label for="reservationFilterHotelName">Otel Adı:</label><input type="text" id="reservationFilterHotelName" placeholder="Otel adını daxil edin"></div>
-                <div><label for="reservationFilterMonth">Ay (Giriş Tarixinə Görə):</label><input type="month" id="reservationFilterMonth"></div>
-                <div><label for="reservationFilterDate">Tarix (Giriş Tarixinə Görə):</label><input type="date" id="reservationFilterDate"></div>
-                <button id="applyReservationFiltersBtn" class="filter-apply-btn" data-i18n-key="applyFiltersButton">Filterlə</button>
-                <button id="resetReservationFiltersBtn" class="filter-reset-btn" data-i18n-key="resetFiltersButton">Filteri Sıfırla</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Satış №</th><th>Turist</th><th>Otel Adı</th><th>Giriş Tarixi</th><th>Çıxış Tarixi</th><th>Böyük Sayı</th><th>Uşaq Sayı</th><th>Əməliyyatlar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reservationsTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="bildirishlerView" style="display: none;">
-            <h2 data-i18n-key="notificationsNav">Təcili Bildirişlər</h2>
-            <p>Bu siyahıda otelə giriş tarixinə 3 gün və ya daha az qalmış, lakin otel və ya transport məlumatları tam doldurulmamış sifarişlər göstərilir.</p>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Satış №</th><th>Turist</th><th>Giriş Tarixi</th><th>Problem</th><th>Əməliyyat</th>
-                        </tr>
-                    </thead>
-                    <tbody id="notificationsTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div id="chatView" style="display: none;">
-            <h2 data-i18n-key="chatNav">Chat</h2>
-            <div class="chat-page-container">
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Mesajınızı yazın..."><button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div id="searchView" style="display: none;">
-            <div class="search-container">
-                <h2>Sifariş Axtarışı (Rez. Nömrəsinə Görə)</h2>
-                <div class="search-form">
-                    <input type="text" id="searchInputRezNomresi" placeholder="Rezervasiya nömrəsini daxil edin..."><button id="searchButton" data-i18n-key="searchButton">Axtar</button>
-                </div>
-                <div id="searchResultDisplay" class="search-result-display"><p>İnvoys yaratmaq üçün rezervasiya nömrəsini daxil edib "Axtar" düyməsini basın.</p></div>
-            </div>
-        </div>
-
-        <div id="hesabatView" style="display: none;">
-            <h2 data-i18n-key="reportsNav">Hesabatlar</h2>
-            <h4>Xarici Şirkət Üzrə Sifarişlər</h4>
-            <div class="filters-container">
-                <div><label for="companyFilterSelect">Şirkət Seçin:</label><select id="companyFilterSelect"></select></div>
-                <button id="getCompanyReportBtn" class="filter-apply-btn">Sifarişləri Göstər</button>
-            </div>
-            <div id="companyReportSummary" class="summary-grid" style="margin-top: 20px; display: none;"></div>
-            <div id="companyReportResult" class="table-container" style="margin-top: 20px; display: none;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Satış №</th><th>Turist</th><th>Ümumi Alış</th><th>Ümumi Satış</th><th>Gəlir</th><th>Əməliyyatlar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="companyOrdersTableBody"></tbody>
-                </table>
-            </div>
-            <hr style="margin: 40px 0;">
-            <h4>Ümumi Maliyyə Hesabatı</h4>
-            <div class="filters-container report-filters"> 
-                <div><label for="reportFilterYear">İl:</label><input type="number" id="reportFilterYear" placeholder="YYYY" min="2000" max="2099"></div>
-                <div><label for="reportFilterMonth">Ay:</label><input type="month" id="reportFilterMonth"></div>
-                <div><label for="reportFilterHotelName">Otel Adı:</label><input type="text" id="reportFilterHotelName" placeholder="Otel adını daxil edin"></div>
-                <button id="generateReportBtn" class="filter-apply-btn">Hesabatı Göstər</button>
-            </div>
-            <div id="reportResultDisplay" class="report-result-display"><p>Hesabatı yaratmaq üçün yuxarıdakı filterləri seçin və "Hesabatı Göstər" düyməsini basın.</p></div>
-        </div>
-
-        <div id="borclarView" style="display: none;">
-            <h2 data-i18n-key="debtsTableTitle">Borclar Cədvəli</h2>
-            <div class="filters-container">
-                <div><label for="borclarSearchInput" data-i18n-key="searchByCompany">Şirkət Adına Görə Axtar:</label><input type="text" id="borclarSearchInput" placeholder="Şirkət adını daxil edin..."></div>
-                <button id="borclarSearchBtn" class="filter-apply-btn" data-i18n-key="searchButton">Axtar</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Şirkət Adı</th><th>Satış №</th><th>Turist</th><th>Borc Məbləği</th><th>Ödəmə Tarixi</th><th>Sifarişə Keçid</th>
-                        </tr>
-                    </thead>
-                    <tbody id="borclarTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div id="recycleBinView" style="display: none;">
-            <h2>Zibil Qabı</h2>
-            <p>Burada silinmiş sifarişləri və xərcləri bərpa edə bilərsiniz.</p>
-            <h3>Silinmiş Sifarişlər</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Satış №</th><th>Turist</th><th>Yaradılma Tarixi</th><th>Əməliyyat</th></tr>
-                    </thead>
-                    <tbody id="deletedOrdersTableBody"></tbody>
-                </table>
-            </div>
-            <h3 style="margin-top: 30px;">Silinmiş İnzibati Xərclər</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Paket Tarixi</th><th>Ümumi Məbləğ</th><th>Əlavə edən</th><th>Əməliyyat</th></tr>
-                    </thead>
-                    <tbody id="deletedExpensesTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Modallar -->
-        <div id="addOrderModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" title="Bağla">&times;</span>
-                <h3 data-i18n-key="modalTitleNewOrder">Yeni Sifariş Əlavə Et</h3>
-                <form id="addOrderForm">
-                    <!-- ... (Sifariş formasının bütün məzmunu) ... -->
-                </form>
-            </div>
-        </div>
-        
-        <div id="noteModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" id="closeNoteModalBtn" title="Bağla">&times;</span>
-                <h3 id="noteModalTitle">Sifariş üçün Qeyd</h3>
-                <form id="noteForm">
-                    <input type="hidden" id="noteSatisNo" name="satisNo">
-                    <label for="noteText">Qeyd Mətni:</label>
-                    <textarea id="noteText" name="qeyd" rows="6"></textarea>
-                    <button type="submit">Qeydi Yadda Saxla</button>
-                </form>
-            </div>
-        </div>
-
-        <div id="settingsPanel" class="settings-panel">
-            <div class="settings-panel-header">
-                <h3>Tənzimləmələr</h3>
-                <span class="close-button" id="closeSettingsPanelBtn">&times;</span>
-            </div>
-            <div class="settings-panel-body">
-                <div class="setting-item">
-                    <label>Animasiyalı Maskot</label>
-                    <div class="toggle-buttons">
-                        <button id="mascotOnBtn" class="toggle-btn active" data-value="on">On</button>
-                        <button id="mascotOffBtn" class="toggle-btn" data-value="off">Off</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="viewOrderModal" class="modal">
-            <div class="modal-content view-only-modal">
-                <span class="close-button" id="closeViewModalBtn" title="Bağla">&times;</span>
-                <h3 id="viewModalTitle">Sifariş Məlumatları</h3>
-                <div id="viewOrderContent"></div>
-                <button id="printOrderBtn" class="action-btn-print"><i class="fa-solid fa-print"></i> Çap Et</button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2025 | Bütün hüquqlar qorunur | <a href="https://wa.me/+994505636801" target="_blank">Şirvan</a> tərəfindən hazırlanıb</p>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <script src="i18n.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="app.js"></script>
-
-    <div id="mascot-container">
-        <div class="mascot-bubble" id="mascot-bubble">Gününüz uğurlu keçsin!</div>
-        <div id="mascot-holding-number"></div>
-        <img src="/mascot.png" alt="Azerweys Maskot">
     </div>
+    
+    <div class="login-container">
+        <h1>Sistemə Giriş</h1>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <form action="/login" method="POST">
+            <div class="input-group"><label for="username">İstifadəçi adı</label><input type="text" id="username" name="username" required></div>
+            <div class="input-group"><label for="password">Şifrə</label><div class="password-wrapper"><input type="password" id="password" name="password" required></div></div>
+            <div class="input-group-checkbox"><input type="checkbox" id="show-password"><label for="show-password">Şifrəni göstər</label></div>
+            <button type="submit">Daxil Ol</button>
+        </form>
+        <div class="links-container">
+            <a href="/forgot-password.html" class="permissions-link">Şifrəni unutdum?</a>
+            <a href="/permissions.html" class="permissions-link">İcazələri İdarə Et</a>
+            <a href="#" id="showCreateUserModalBtn" class="permissions-link">Yeni İstifadəçi Yarat</a>
+        </div>
+    </div>
+
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="ownerAccessPrompt">
+                <h3>Sahibkar Təsdiqləməsi</h3>
+                <p>Yeni istifadəçi yaratmaq üçün sahibkar parolunu daxil edin.</p>
+                <form id="ownerAccessForm">
+                    <div class="input-group"><label for="ownerPassword">Parol:</label><input type="password" id="ownerPassword" required></div>
+                    <button type="submit">Təsdiqlə</button>
+                </form>
+            </div>
+            <div id="addUserFormContainer" style="display: none;">
+                <h3>Yeni İstifadəçi Əlavə Et</h3>
+                <form id="addUserForm">
+                    <div class="input-group"><label for="newUsername">İstifadəçi Adı (login):</label><input type="text" id="newUsername" required></div>
+                    <div class="input-group"><label for="newDisplayName">Görünən Ad:</label><input type="text" id="newDisplayName" required></div>
+                    <div class="input-group"><label for="newEmail">E-poçt:</label><input type="email" id="newEmail" required></div>
+                    <div class="input-group"><label for="newPassword">Şifrə (min. 6 simvol):</label><input type="password" id="newPassword" required></div>
+                    <div class="input-group"><label for="newRole">Rol:</label>
+                        <select id="newRole" required>
+                            <option value="sales_manager">Satış Meneceri</option>
+                            <option value="finance">Maliyyəçi</option>
+                            <option value="editor">Redaktor</option>
+                        </select>
+                    </div>
+                    <button type="submit">İstifadəçini Yarat</button>
+                </form>
+            </div>
+            <div id="modalMessage" class="modal-message"></div>
+        </div>
+    </div>
+
+    <script src="login-features.js"></script>
+    <script src="i18n.js"></script>
 </body>
 </html>
