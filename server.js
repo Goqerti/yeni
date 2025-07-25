@@ -20,6 +20,9 @@ const { requireLogin, requireOwnerRole, requireFinanceOrOwner } = require('./mid
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Render/Fly.io kimi platformalar üçün proxy ayarı
+app.set('trust proxy', 1);
+
 // --- Middleware Tənzimləmələri ---
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -32,6 +35,7 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 saat
     }
 }));
@@ -103,9 +107,33 @@ wss.on('connection', (ws) => {
     });
 });
 
+// --- Render Oyaq Saxlama Məntiqi ---
+// Bu kod yalnız server mühitində (NODE_ENV=production) işləyəcək
+if (process.env.NODE_ENV === 'production') {
+    const PING_INTERVAL = 14 * 60 * 1000; // 14 dəqiqə
+    const selfPingUrl = process.env.RENDER_EXTERNAL_URL;
+
+    if (selfPingUrl) {
+        setInterval(() => {
+            console.log(`Pinging server at ${selfPingUrl} to keep it awake...`);
+            http.get(selfPingUrl, (res) => {
+                if (res.statusCode === 200) {
+                    console.log('Ping successful.');
+                } else {
+                    console.error(`Ping failed with status code: ${res.statusCode}`);
+                }
+            }).on('error', (err) => {
+                console.error('Ping error:', err.message);
+            });
+        }, PING_INTERVAL);
+    } else {
+        console.warn('RENDER_EXTERNAL_URL not set. Self-pinging is disabled.');
+    }
+}
+
+
 server.listen(PORT, () => {
     initializeApp();
-    // DÜZƏLİŞ BURADADIR: telegramService.init() sətri silindi.
     startBackupSchedule(2); // Hər 2 dəqiqədən bir yedəkləmə
     console.log(`Server http://localhost:${PORT} ünvanında işləyir`);
 });
