@@ -131,7 +131,6 @@ if (process.env.NODE_ENV === 'production') {
     }
 }
 
-
 server.listen(PORT, () => {
     initializeApp();
     startBackupSchedule(2); // Hər 2 dəqiqədən bir yedəkləmə
