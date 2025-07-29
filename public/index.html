@@ -15,9 +15,9 @@
 <body>
     <header>
         <h1 id="main-header-title">Musa</h1>
-
         <div class="nav-container" id="navContainer">
             <nav>
+                <button id="navDashboardBtn" class="nav-element active" data-i18n-key="dashboardNav">Panel</button>
                 <button id="navSatishlarBtn" class="nav-element" data-i18n-key="salesNav">Satışlar</button>
                 <button id="navRezervasiyalarBtn" class="nav-element" data-i18n-key="reservationsNav">Rezervasiyalar</button>
                 <a href="/tasks.html" id="navTasksBtn" class="nav-element">Tapşırıqlar<span id="tasks-count" class="badge" style="display:none;"></span></a>
@@ -32,6 +32,7 @@
                 <button id="navBorclarBtn" class="nav-element" data-i18n-key="debtsNav">Borclar</button>
                 <a href="/finance.html" id="navFinanceBtn" class="nav-element nav-btn-owner-only" style="display: none;">Maliyyə</a>
                 <button id="settingsBtn" class="nav-element" title="Tənzimləmələr"><i class="fa-solid fa-gear"></i></button>
+                <button id="recycleBinBtn" class="nav-element" title="Zibil Qabı"><i class="fa-solid fa-recycle"></i></button>
                 <a href="/logout" class="nav-element logout-btn" data-i18n-key="logoutNav">Çıxış</a>
                 
                 <div class="lang-switcher-container-header">
@@ -55,20 +56,17 @@
     </header>
 
     <main>
-        <!-- Bütün View-lar (Səhifələr) -->
         <div id="dashboardView">
              <div class="financial-dashboard-container">
-                <h2>Maliyyə Paneli</h2>
+                <h2>Aylıq Maliyyə Paneli</h2>
                 <div class="filters-container" style="margin-bottom: 20px;">
                     <div>
-                        <label for="dashboardMonthFilter">Aya görə filterlə:</label>
+                        <label for="dashboardMonthFilter">Ay seçin:</label>
                         <input type="month" id="dashboardMonthFilter">
                     </div>
-                    <button id="resetDashboardFilterBtn" class="filter-reset-btn">Sıfırla</button>
                 </div>
                 <div id="financialDashboard" class="summary-grid">
-                    <!-- Məlumatlar JavaScript ilə bura yüklənəcək -->
-                </div>
+                    </div>
             </div>
         </div>
 
@@ -225,14 +223,12 @@
             </div>
         </div>
 
-        <!-- Modallar -->
         <div id="addOrderModal" class="modal">
             <div class="modal-content">
                 <span class="close-button" title="Bağla">&times;</span>
                 <h3 data-i18n-key="modalTitleNewOrder">Yeni Sifariş Əlavə Et</h3>
                 <form id="addOrderForm">
-                    <!-- ... (Sifariş formasının bütün məzmunu) ... -->
-                </form>
+                    </form>
             </div>
         </div>
         
