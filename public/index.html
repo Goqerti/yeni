@@ -15,6 +15,7 @@
 <body>
     <header>
         <h1 id="main-header-title">Musa</h1>
+
         <div class="nav-container" id="navContainer">
             <nav>
                 <button id="navDashboardBtn" class="nav-element active" data-i18n-key="dashboardNav">Panel</button>
@@ -58,12 +59,13 @@
     <main>
         <div id="dashboardView">
              <div class="financial-dashboard-container">
-                <h2>Aylıq Maliyyə Paneli</h2>
+                <h2>Maliyyə Paneli</h2>
                 <div class="filters-container" style="margin-bottom: 20px;">
                     <div>
-                        <label for="dashboardMonthFilter">Ay seçin:</label>
+                        <label for="dashboardMonthFilter">Aya görə filterlə:</label>
                         <input type="month" id="dashboardMonthFilter">
                     </div>
+                    <button id="resetDashboardFilterBtn" class="filter-reset-btn">Sıfırla</button>
                 </div>
                 <div id="financialDashboard" class="summary-grid">
                     </div>
@@ -228,7 +230,79 @@
                 <span class="close-button" title="Bağla">&times;</span>
                 <h3 data-i18n-key="modalTitleNewOrder">Yeni Sifariş Əlavə Et</h3>
                 <form id="addOrderForm">
-                    </form>
+                    <h4 data-i18n-key="mainInfo">Əsas Məlumatlar</h4>
+                    <div class="form-group-inline">
+                        <div><label for="adultGuests" data-i18n-key="adultGuestLabel">Böyük Qonaq Sayı:</label><input type="number" id="adultGuests" name="adultGuests" min="1" value="1"></div>
+                        <div><label for="childGuests" data-i18n-key="childGuestLabel">Uşaq Qonaq Sayı:</label><input type="number" id="childGuests" name="childGuests" min="0" value="0"></div>
+                    </div>
+                    <label data-i18n-key="touristLabel">Turistlər:</label>
+                    <div id="touristsContainer" class="dynamic-input-container"></div>
+                    <label for="xariciSirket" data-i18n-key="foreignCompanyLabel">Xarici şirkət:</label>
+                    <input type="text" id="xariciSirket" name="xariciSirket">
+                    <label for="rezNomresi" data-i18n-key="rezNoLabel">Rez. nömrəsi/əməli. nömrəsi:</label>
+                    <input type="text" id="rezNomresi" name="rezNomresi" placeholder="Rezervasiya nömrəsini daxil edin"> 
+
+                    <hr>
+                    <div class="dynamic-section-header">
+                        <h4 data-i18n-key="hotelInfo">Otel Məlumatları</h4>
+                        <button type="button" id="addHotelBtn" class="action-btn-small">+</button>
+                    </div>
+                    <div id="hotelEntriesContainer"></div>
+
+                    <hr>
+                    <h4 data-i18n-key="transportInfo">Transport Məlumatları</h4>
+                    <div class="form-group-inline">
+                        <div><label for="transport_surucuMelumatlari">Tur/Sürücü Məlumatları:</label><input type="text" id="transport_surucuMelumatlari" name="transport_surucuMelumatlari"></div>
+                        <div><label for="transport_xerci">Transport Xərci:</label><input type="number" id="transport_xerci" name="transport_xerci" class="cost-input" value="0" step="0.01"></div>
+                    </div>
+                    <label for="transport_odenisKartMelumatlari">Ödəniş Kart Məlumatları (DİQQƏT: Həssas məlumat!):</label>
+                    <input type="text" id="transport_odenisKartMelumatlari" name="transport_odenisKartMelumatlari" placeholder="Yalnız referans və ya son 4 rəqəm">
+                    <label for="transport_turTevsiri">Tur Təsviri:</label>
+                    <textarea id="transport_turTevsiri" name="transport_turTevsiri" rows="3"></textarea>
+                    <label for="transport_elaveXidmetler">Əlavə Xidmətlər (Transport):</label>
+                    <input type="text" id="transport_elaveXidmetler" name="transport_elaveXidmetler">
+
+                    <hr>
+                    <h4 data-i18n-key="costDetails">Xərclərin Detalları (Alış Qiymətini Avtomatik Hesablayır)</h4>
+                     <div class="form-group-inline">
+                        <div><label for="detailedCost_paket">Paket Xərci:</label><input type="number" step="0.01" id="detailedCost_paket" name="detailedCost_paket" value="0" class="cost-input"></div>
+                        <div><label for="detailedCost_beledci">Bələdçi Xərci:</label><input type="number" step="0.01" id="detailedCost_beledci" name="detailedCost_beledci" value="0" class="cost-input"></div>
+                    </div>
+                     <div class="form-group-inline">
+                        <div><label for="detailedCost_muzey">Muzey/Atraksiyon Xərci:</label><input type="number" step="0.01" id="detailedCost_muzey" name="detailedCost_muzey" value="0" class="cost-input"></div>
+                        <div><label for="detailedCost_viza">Viza Xərci:</label><input type="number" step="0.01" id="detailedCost_viza" name="detailedCost_viza" value="0" class="cost-input"></div>
+                    </div>
+                     <div class="form-group-inline">
+                         <div><label for="detailedCost_diger">Digər Xərclər:</label><input type="number" step="0.01" id="detailedCost_diger" name="detailedCost_diger" value="0" class="cost-input"></div>
+                        <div></div>
+                    </div>
+
+                    <hr>
+                    <h4 data-i18n-key="financialInfo">Maliyyə Məlumatları (Alış/Satış)</h4>
+                    <div class="form-group-inline">
+                        <div><label for="alishAmount">Alış Qiyməti (Avtomatik):</label><input type="number" step="0.01" id="alishAmount" name="alishAmount" value="0" readonly></div>
+                        <div><label for="alishCurrency">Valyuta (Alış):</label><select id="alishCurrency" name="alishCurrency"><option value="AZN" selected>AZN</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+                    </div>
+                    <div class="form-group-inline">
+                        <div><label for="satishAmount">Satış Qiyməti:</label><input type="number" step="0.01" id="satishAmount" name="satishAmount" value="0"></div>
+                        <div><label for="satishCurrency">Valyuta (Satış):</label><select id="satishCurrency" name="satishCurrency"><option value="AZN" selected>AZN</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+                    </div>
+
+                    <hr>
+                    <h4 data-i18n-key="otherInfo">Digər</h4>
+                    <label for="status" data-i18n-key="orderStatusLabel">Status:</label>
+                    <select id="status" name="status"><option value="Davam edir" selected>Davam edir</option><option value="Bitdi">Bitdi</option><option value="Ləğv edildi">Ləğv edildi</option></select>
+                    <label for="qeyd" data-i18n-key="noteLabel">Qeyd (Sifariş üçün ümumi):</label>
+                    <input type="text" id="qeyd" name="qeyd">
+                    
+                    <h4 data-i18n-key="paymentInfo">Ödəniş Məlumatları (Xarici Şirkət)</h4>
+                    <div class="form-group-inline">
+                        <div><label for="paymentStatus" data-i18n-key="paymentStatusLabel">Ödəniş Statusu:</label><select id="paymentStatus" name="paymentStatus"><option value="Ödənilməyib" selected>Ödənilməyib</option><option value="Ödənilib">Ödənilib</option></select></div>
+                        <div><label for="paymentDueDate" data-i18n-key="paymentDueDateLabel">Gözlənilən Ödəniş Tarixi:</label><input type="date" id="paymentDueDate" name="paymentDueDate"></div>
+                    </div>
+
+                    <button type="submit" data-i18n-key="addOrderButton">Sifarişi Əlavə Et</button>
+                </form>
             </div>
         </div>
         
